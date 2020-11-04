@@ -435,7 +435,8 @@ static void neon_KeccakF1600_StatePermute(v128 state[25])
         vROL(BCo, Amo, t3, 21);
         vROL(BCu, Asu, t4, 14);
         vXNA(Eba, BCa, BCe, BCi);
-        vxor(Eba, Eba, vdupq_n_u64(KeccakF_RoundConstants[round]));
+        t5 = vdupq_n_u64(KeccakF_RoundConstants[round]);
+        vxor(Eba, Eba, t5);
         vXNA(Ebe, BCe, BCi, BCo);
         vXNA(Ebi, BCi, BCo, BCu);
         vXNA(Ebo, BCo, BCu, BCa);
@@ -536,7 +537,8 @@ static void neon_KeccakF1600_StatePermute(v128 state[25])
         vROL(BCo, Emo, t3, 21);
         vROL(BCu, Esu, t4, 14);
         vXNA(Aba, BCa, BCe, BCi);
-        vxor(Aba, Aba, vdupq_n_u64(KeccakF_RoundConstants[round + 1]));
+        t5 = vdupq_n_u64(KeccakF_RoundConstants[round + 1]);
+        vxor(Aba, Aba, t5);
         vXNA(Abe, BCe, BCi, BCo);
         vXNA(Abi, BCi, BCo, BCu);
         vXNA(Abo, BCo, BCu, BCa);
