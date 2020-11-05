@@ -24,3 +24,24 @@ cothan@manjaro-rp4 ~/w/Keccak (main)> gcc neon_fips202.c -o neon_fips202 -O3 -lp
 cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
 NEON:      946491594
 FIPS202.c: 444340774
+
+
+After improve register xor chain
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON: 955715832
+FIPS202.c: 448332361
+
+Improve xor chain and static inline function
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON: 949880091
+FIPS202.c: 443139724
+
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> 
+gcc neon_fips202.c -o neon_fips202 -O3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic 
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON:      949898876
+FIPS202.c: 442931853

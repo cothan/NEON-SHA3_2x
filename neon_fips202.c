@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <papi.h>
+#include <time.h>
 
 #define NROUNDS 24
 #define ROL(a, offset) ((a << offset) ^ (a >> (64-offset)))
@@ -16,15 +17,22 @@
 #define vxor(c, a, b) c = veorq_u64(a, b);
 // Rotate by n bit ((a << offset) ^ (a >> (64-offset)))
 #define vROL(out, a, offset) \
-    out = vsriq_n_u64(vshlq_n_u64(a, offset), a, 64 - offset);
+    out = vshlq_n_u64(a, offset);\
+    out = vsriq_n_u64(out, a, 64 - offset);
 // Xor chain: out = a ^ b ^ c ^ d ^ e
 #define vXOR4(out, a, b, c, d, e) \
-    out = veorq_u64(a, veorq_u64(b, veorq_u64(c, veorq_u64(d, e))));
+    out = veorq_u64(a, b);\
+    out = veorq_u64(out, c);\
+    out = veorq_u64(out, d);\
+    out = veorq_u64(out, e);
+    // out = veorq_u64(veorq_u64(a, b), veorq_u64(c, veorq_u64(d, e)));
 // Not And c = ~a & b
 // #define vbic(c, a, b) c = vbicq_u64(b, a);
 
 // Xor Not And: out = a ^ ( (~b) & c)
-#define vXNA(out, a, b, c) out = veorq_u64(a, vbicq_u64(c, b));
+#define vXNA(out, a, b, c) \
+    out = vbicq_u64(c, b);\
+    out = veorq_u64(out, a);
 
 // Rotate by 1 bit, then XOR: a ^ ROL(b)
 #define vrxor(c, a, b) c = vrax1q_u64(a, b);
@@ -362,7 +370,8 @@ void KeccakF1600_StatePermute(uint64_t state[25])
 
 typedef uint64x2_t v128;
 
-static void neon_KeccakF1600_StatePermute(v128 state[25])
+static inline
+void neon_KeccakF1600_StatePermute(v128 state[25])
 {
     v128 Aba, Abe, Abi, Abo, Abu;
     v128 Aga, Age, Agi, Ago, Agu;
@@ -425,7 +434,7 @@ static void neon_KeccakF1600_StatePermute(v128 state[25])
         vxor(Do, BCi, Do);
         vxor(Du, BCo, Du);
 
-        vxor(BCa, Aba, Da);
+        vxor(Aba, Aba, Da);
         vxor(Age, Age, De);
         vxor(Aki, Aki, Di);
         vxor(Amo, Amo, Do);
@@ -434,12 +443,12 @@ static void neon_KeccakF1600_StatePermute(v128 state[25])
         vROL(BCi, Aki, 43);
         vROL(BCo, Amo, 21);
         vROL(BCu, Asu, 14);
-        vXNA(Eba, BCa, BCe, BCi);
+        vXNA(Eba, Aba, BCe, BCi);
         vxor(Eba, Eba, vdupq_n_u64(KeccakF_RoundConstants[round]));
         vXNA(Ebe, BCe, BCi, BCo);
         vXNA(Ebi, BCi, BCo, BCu);
-        vXNA(Ebo, BCo, BCu, BCa);
-        vXNA(Ebu, BCu, BCa, BCe);
+        vXNA(Ebo, BCo, BCu, Aba);
+        vXNA(Ebu, BCu, Aba, BCe);
 
         vxor(Abo, Abo, Do);
         vxor(Agu, Agu, Du);
@@ -526,7 +535,7 @@ static void neon_KeccakF1600_StatePermute(v128 state[25])
         vxor(Do, BCi, Do);
         vxor(Du, BCo, Du);
 
-        vxor(BCa, Eba, Da);
+        vxor(Eba, Eba, Da);
         vxor(Ege, Ege, De);
         vxor(Eki, Eki, Di);
         vxor(Emo, Emo, Do);
@@ -535,12 +544,12 @@ static void neon_KeccakF1600_StatePermute(v128 state[25])
         vROL(BCi, Eki, 43);
         vROL(BCo, Emo, 21);
         vROL(BCu, Esu, 14);
-        vXNA(Aba, BCa, BCe, BCi);
+        vXNA(Aba, Eba, BCe, BCi);
         vxor(Aba, Aba, vdupq_n_u64(KeccakF_RoundConstants[round + 1]));
         vXNA(Abe, BCe, BCi, BCo);
         vXNA(Abi, BCi, BCo, BCu);
-        vXNA(Abo, BCo, BCu, BCa);
-        vXNA(Abu, BCu, BCa, BCe);
+        vXNA(Abo, BCo, BCu, Eba);
+        vXNA(Abu, BCu, Eba, BCe);
 
         vxor(Ebo, Ebo, Do);
         vxor(Egu, Egu, Du);
@@ -634,7 +643,7 @@ static void neon_KeccakF1600_StatePermute(v128 state[25])
     state[24] = Asu;
 }
 
-#define TESTS 10000000
+#define TESTS 10000
 
 int main()
 {
