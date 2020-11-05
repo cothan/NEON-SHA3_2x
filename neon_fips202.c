@@ -34,8 +34,9 @@
     out = vbicq_u64(c, b);\
     out = veorq_u64(out, a);
 
-// Rotate by 1 bit, then XOR: a ^ ROL(b)
+// Rotate by 1 bit, then XOR: a ^ ROL(b): SHA1 instruction, not support
 #define vrxor(c, a, b) c = vrax1q_u64(a, b);
+
 // End Define
 
 /* Keccak round constants */
@@ -643,7 +644,7 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
     state[24] = Asu;
 }
 
-#define TESTS 1000000
+#define TESTS 10000000
 
 int main()
 {

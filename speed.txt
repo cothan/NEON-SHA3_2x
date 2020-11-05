@@ -45,3 +45,11 @@ gcc neon_fips202.c -o neon_fips202 -O3 -lpapi -mtune=native -march=native -fomit
 cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
 NEON:      949898876
 FIPS202.c: 442931853
+
+
+Improve xor chain and static inline function + reorder instruction 
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> gcc neon_fips202.c -o neon_fips202 -O3 -g3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON: 949899223
+FIPS: 442640898
