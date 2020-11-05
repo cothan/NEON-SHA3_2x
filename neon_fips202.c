@@ -424,24 +424,24 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
 
         //thetaRhoPiChiIotaPrepareTheta(round  , A, E)
         vROL(Da, BCe, 1);
-        vROL(De, BCi, 1);
-        vROL(Di, BCo, 1);
-        vROL(Do, BCu, 1);
-        vROL(Du, BCa, 1);
         vxor(Da, BCu, Da);
+        vROL(De, BCi, 1);
         vxor(De, BCa, De);
+        vROL(Di, BCo, 1);
         vxor(Di, BCe, Di);
+        vROL(Do, BCu, 1);
         vxor(Do, BCi, Do);
+        vROL(Du, BCa, 1);
         vxor(Du, BCo, Du);
 
         vxor(Aba, Aba, Da);
         vxor(Age, Age, De);
-        vxor(Aki, Aki, Di);
-        vxor(Amo, Amo, Do);
-        vxor(Asu, Asu, Du);
         vROL(BCe, Age, 44);
+        vxor(Aki, Aki, Di);
         vROL(BCi, Aki, 43);
+        vxor(Amo, Amo, Do);
         vROL(BCo, Amo, 21);
+        vxor(Asu, Asu, Du);
         vROL(BCu, Asu, 14);
         vXNA(Eba, Aba, BCe, BCi);
         vxor(Eba, Eba, vdupq_n_u64(KeccakF_RoundConstants[round]));
@@ -451,14 +451,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Ebu, BCu, Aba, BCe);
 
         vxor(Abo, Abo, Do);
-        vxor(Agu, Agu, Du);
-        vxor(Aka, Aka, Da);
-        vxor(Ame, Ame, De);
-        vxor(Asi, Asi, Di);
         vROL(BCa, Abo, 28);
+        vxor(Agu, Agu, Du);
         vROL(BCe, Agu, 20);
+        vxor(Aka, Aka, Da);
         vROL(BCi, Aka, 3);
+        vxor(Ame, Ame, De);
         vROL(BCo, Ame, 45);
+        vxor(Asi, Asi, Di);
         vROL(BCu, Asi, 61);
         vXNA(Ega, BCa, BCe, BCi);
         vXNA(Ege, BCe, BCi, BCo);
@@ -467,14 +467,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Egu, BCu, BCa, BCe);
 
         vxor(Abe, Abe, De);
-        vxor(Agi, Agi, Di);
-        vxor(Ako, Ako, Do);
-        vxor(Amu, Amu, Du);
-        vxor(Asa, Asa, Da);
         vROL(BCa, Abe, 1);
+        vxor(Agi, Agi, Di);
         vROL(BCe, Agi, 6);
+        vxor(Ako, Ako, Do);
         vROL(BCi, Ako, 25);
+        vxor(Amu, Amu, Du);
         vROL(BCo, Amu, 8);
+        vxor(Asa, Asa, Da);
         vROL(BCu, Asa, 18);
         vXNA(Eka, BCa, BCe, BCi);
         vXNA(Eke, BCe, BCi, BCo);
@@ -483,14 +483,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Eku, BCu, BCa, BCe);
 
         vxor(Abu, Abu, Du);
-        vxor(Aga, Aga, Da);
-        vxor(Ake, Ake, De);
-        vxor(Ami, Ami, Di);
-        vxor(Aso, Aso, Do);
         vROL(BCa, Abu, 27);
+        vxor(Aga, Aga, Da);
         vROL(BCe, Aga, 36);
+        vxor(Ake, Ake, De);
         vROL(BCi, Ake, 10);
+        vxor(Ami, Ami, Di);
         vROL(BCo, Ami, 15);
+        vxor(Aso, Aso, Do);
         vROL(BCu, Aso, 56);
         vXNA(Ema, BCa, BCe, BCi);
         vXNA(Eme, BCe, BCi, BCo);
@@ -499,14 +499,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Emu, BCu, BCa, BCe);
 
         vxor(Abi, Abi, Di);
-        vxor(Ago, Ago, Do);
-        vxor(Aku, Aku, Du);
-        vxor(Ama, Ama, Da);
-        vxor(Ase, Ase, De);
         vROL(BCa, Abi, 62);
+        vxor(Ago, Ago, Do);
         vROL(BCe, Ago, 55);
+        vxor(Aku, Aku, Du);
         vROL(BCi, Aku, 39);
+        vxor(Ama, Ama, Da);
         vROL(BCo, Ama, 41);
+        vxor(Ase, Ase, De);
         vROL(BCu, Ase, 2);
         vXNA(Esa, BCa, BCe, BCi);
         vXNA(Ese, BCe, BCi, BCo);
@@ -525,24 +525,24 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
 
         //thetaRhoPiChiIotaPrepareTheta(round+1, E, A)
         vROL(Da, BCe, 1);
-        vROL(De, BCi, 1);
-        vROL(Di, BCo, 1);
-        vROL(Do, BCu, 1);
-        vROL(Du, BCa, 1);
         vxor(Da, BCu, Da);
+        vROL(De, BCi, 1);
         vxor(De, BCa, De);
+        vROL(Di, BCo, 1);
         vxor(Di, BCe, Di);
+        vROL(Do, BCu, 1);
         vxor(Do, BCi, Do);
+        vROL(Du, BCa, 1);
         vxor(Du, BCo, Du);
 
         vxor(Eba, Eba, Da);
         vxor(Ege, Ege, De);
-        vxor(Eki, Eki, Di);
-        vxor(Emo, Emo, Do);
-        vxor(Esu, Esu, Du);
         vROL(BCe, Ege, 44);
+        vxor(Eki, Eki, Di);
         vROL(BCi, Eki, 43);
+        vxor(Emo, Emo, Do);
         vROL(BCo, Emo, 21);
+        vxor(Esu, Esu, Du);
         vROL(BCu, Esu, 14);
         vXNA(Aba, Eba, BCe, BCi);
         vxor(Aba, Aba, vdupq_n_u64(KeccakF_RoundConstants[round + 1]));
@@ -552,14 +552,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Abu, BCu, Eba, BCe);
 
         vxor(Ebo, Ebo, Do);
-        vxor(Egu, Egu, Du);
-        vxor(Eka, Eka, Da);
-        vxor(Eme, Eme, De);
-        vxor(Esi, Esi, Di);
         vROL(BCa, Ebo, 28);
+        vxor(Egu, Egu, Du);
         vROL(BCe, Egu, 20);
+        vxor(Eka, Eka, Da);
         vROL(BCi, Eka, 3);
+        vxor(Eme, Eme, De);
         vROL(BCo, Eme, 45);
+        vxor(Esi, Esi, Di);
         vROL(BCu, Esi, 61);
         vXNA(Aga, BCa, BCe, BCi);
         vXNA(Age, BCe, BCi, BCo);
@@ -568,14 +568,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Agu, BCu, BCa, BCe);
 
         vxor(Ebe, Ebe, De);
-        vxor(Egi, Egi, Di);
-        vxor(Eko, Eko, Do);
-        vxor(Emu, Emu, Du);
-        vxor(Esa, Esa, Da);
         vROL(BCa, Ebe, 1);
+        vxor(Egi, Egi, Di);
         vROL(BCe, Egi, 6);
+        vxor(Eko, Eko, Do);
         vROL(BCi, Eko, 25);
+        vxor(Emu, Emu, Du);
         vROL(BCo, Emu, 8);
+        vxor(Esa, Esa, Da);
         vROL(BCu, Esa, 18);
         vXNA(Aka, BCa, BCe, BCi);
         vXNA(Ake, BCe, BCi, BCo);
@@ -584,14 +584,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Aku, BCu, BCa, BCe);
 
         vxor(Ebu, Ebu, Du);
-        vxor(Ega, Ega, Da);
-        vxor(Eke, Eke, De);
-        vxor(Emi, Emi, Di);
-        vxor(Eso, Eso, Do);
         vROL(BCa, Ebu, 27);
+        vxor(Ega, Ega, Da);
         vROL(BCe, Ega, 36);
+        vxor(Eke, Eke, De);
         vROL(BCi, Eke, 10);
+        vxor(Emi, Emi, Di);
         vROL(BCo, Emi, 15);
+        vxor(Eso, Eso, Do);
         vROL(BCu, Eso, 56);
         vXNA(Ama, BCa, BCe, BCi);
         vXNA(Ame, BCe, BCi, BCo);
@@ -600,14 +600,14 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
         vXNA(Amu, BCu, BCa, BCe);
 
         vxor(Ebi, Ebi, Di);
-        vxor(Ego, Ego, Do);
-        vxor(Eku, Eku, Du);
-        vxor(Ema, Ema, Da);
-        vxor(Ese, Ese, De);
         vROL(BCa, Ebi, 62);
+        vxor(Ego, Ego, Do);
         vROL(BCe, Ego, 55);
+        vxor(Eku, Eku, Du);
         vROL(BCi, Eku, 39);
+        vxor(Ema, Ema, Da);
         vROL(BCo, Ema, 41);
+        vxor(Ese, Ese, De);
         vROL(BCu, Ese, 2);
         vXNA(Asa, BCa, BCe, BCi);
         vXNA(Ase, BCe, BCi, BCo);
@@ -643,7 +643,7 @@ void neon_KeccakF1600_StatePermute(v128 state[25])
     state[24] = Asu;
 }
 
-#define TESTS 10000
+#define TESTS 1000000
 
 int main()
 {
@@ -676,7 +676,7 @@ int main()
         KeccakF1600_StatePermute(s);
     }
     end = PAPI_get_real_cyc();
-    printf("FIPS202.c: %lld\n", end - start);
+    printf("FIPS: %lld\n", end - start);
         
 
     v128 sum = vdupq_n_u64(0);
