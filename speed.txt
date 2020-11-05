@@ -1,0 +1,26 @@
+#define TESTS 10000000
+cothan@manjaro-rp4 ~/w/Keccak (main)> gcc neon_fips202.c -o neon_fips202 -g3 -O3 -lpapi
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON:     1019738703
+FIPS202.c: 454824710
+
+
+#define TESTS 10000000
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> clang neon_fips202.c -o neon_fips202 -g3 -O3 -lpapi
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON:     1097437346
+FIPS202.c: 459948311
+
+
+cothan@manjaro-rp4 ~/w/Keccak (main) [1]> clang neon_fips202.c -o neon_fips202 -O3 -lpapi -mtune=native
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON:     1095655980
+FIPS202.c: 457200760
+
+
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> gcc neon_fips202.c -o neon_fips202 -O3 -lpapi -mtune=native -march=native
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON:      946491594
+FIPS202.c: 444340774
