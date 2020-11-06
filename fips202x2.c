@@ -12,21 +12,21 @@
 // c = a ^ b
 #define vxor(c, a, b) c = veorq_u64(a, b);
 // Rotate by n bit ((a << offset) ^ (a >> (64-offset)))
-#define vROL(out, a, offset)      \
-    out = vshlq_n_u64(a, offset); \
-    out = vsriq_n_u64(out, a, 64 - offset);
+#define vROL(out, a, offset)    \
+  out = vshlq_n_u64(a, offset); \
+  out = vsriq_n_u64(out, a, 64 - offset);
 // Xor chain: out = a ^ b ^ c ^ d ^ e
 #define vXOR4(out, a, b, c, d, e) \
-    out = veorq_u64(a, b);        \
-    out = veorq_u64(out, c);      \
-    out = veorq_u64(out, d);      \
-    out = veorq_u64(out, e);
+  out = veorq_u64(a, b);          \
+  out = veorq_u64(out, c);        \
+  out = veorq_u64(out, d);        \
+  out = veorq_u64(out, e);
 // Not And c = ~a & b
 // #define vbic(c, a, b) c = vbicq_u64(b, a);
 // Xor Not And: out = a ^ ( (~b) & c)
 #define vXNA(out, a, b, c) \
-    out = vbicq_u64(c, b); \
-    out = veorq_u64(out, a);
+  out = vbicq_u64(c, b);   \
+  out = veorq_u64(out, a);
 // Rotate by 1 bit, then XOR: a ^ ROL(b): SHA1 instruction, not support
 #define vrxor(c, a, b) c = vrax1q_u64(a, b);
 // End Define
@@ -67,274 +67,274 @@ static const uint64_t neon_KeccakF_RoundConstants[NROUNDS] = {
 **************************************************/
 static inline void neon_KeccakF1600_StatePermute(v128 state[25])
 {
-    v128 Aba, Abe, Abi, Abo, Abu;
-    v128 Aga, Age, Agi, Ago, Agu;
-    v128 Aka, Ake, Aki, Ako, Aku;
-    v128 Ama, Ame, Ami, Amo, Amu;
-    v128 Asa, Ase, Asi, Aso, Asu;
-    v128 BCa, BCe, BCi, BCo, BCu; // tmp
-    v128 Da, De, Di, Do, Du;      // D
-    v128 Eba, Ebe, Ebi, Ebo, Ebu;
-    v128 Ega, Ege, Egi, Ego, Egu;
-    v128 Eka, Eke, Eki, Eko, Eku;
-    v128 Ema, Eme, Emi, Emo, Emu;
-    v128 Esa, Ese, Esi, Eso, Esu;
+  v128 Aba, Abe, Abi, Abo, Abu;
+  v128 Aga, Age, Agi, Ago, Agu;
+  v128 Aka, Ake, Aki, Ako, Aku;
+  v128 Ama, Ame, Ami, Amo, Amu;
+  v128 Asa, Ase, Asi, Aso, Asu;
+  v128 BCa, BCe, BCi, BCo, BCu; // tmp
+  v128 Da, De, Di, Do, Du;      // D
+  v128 Eba, Ebe, Ebi, Ebo, Ebu;
+  v128 Ega, Ege, Egi, Ego, Egu;
+  v128 Eka, Eke, Eki, Eko, Eku;
+  v128 Ema, Eme, Emi, Emo, Emu;
+  v128 Esa, Ese, Esi, Eso, Esu;
 
-    //copyFromState(A, state)
-    Aba = state[0];
-    Abe = state[1];
-    Abi = state[2];
-    Abo = state[3];
-    Abu = state[4];
-    Aga = state[5];
-    Age = state[6];
-    Agi = state[7];
-    Ago = state[8];
-    Agu = state[9];
-    Aka = state[10];
-    Ake = state[11];
-    Aki = state[12];
-    Ako = state[13];
-    Aku = state[14];
-    Ama = state[15];
-    Ame = state[16];
-    Ami = state[17];
-    Amo = state[18];
-    Amu = state[19];
-    Asa = state[20];
-    Ase = state[21];
-    Asi = state[22];
-    Aso = state[23];
-    Asu = state[24];
+  //copyFromState(A, state)
+  Aba = state[0];
+  Abe = state[1];
+  Abi = state[2];
+  Abo = state[3];
+  Abu = state[4];
+  Aga = state[5];
+  Age = state[6];
+  Agi = state[7];
+  Ago = state[8];
+  Agu = state[9];
+  Aka = state[10];
+  Ake = state[11];
+  Aki = state[12];
+  Ako = state[13];
+  Aku = state[14];
+  Ama = state[15];
+  Ame = state[16];
+  Ami = state[17];
+  Amo = state[18];
+  Amu = state[19];
+  Asa = state[20];
+  Ase = state[21];
+  Asi = state[22];
+  Aso = state[23];
+  Asu = state[24];
 
-    for (int round = 0; round < NROUNDS; round += 2)
-    {
-        //    prepareTheta
-        vXOR4(BCa, Aba, Aga, Aka, Ama, Asa);
-        vXOR4(BCe, Abe, Age, Ake, Ame, Ase);
-        vXOR4(BCi, Abi, Agi, Aki, Ami, Asi);
-        vXOR4(BCo, Abo, Ago, Ako, Amo, Aso);
-        vXOR4(BCu, Abu, Agu, Aku, Amu, Asu);
+  for (int round = 0; round < NROUNDS; round += 2)
+  {
+    //    prepareTheta
+    vXOR4(BCa, Aba, Aga, Aka, Ama, Asa);
+    vXOR4(BCe, Abe, Age, Ake, Ame, Ase);
+    vXOR4(BCi, Abi, Agi, Aki, Ami, Asi);
+    vXOR4(BCo, Abo, Ago, Ako, Amo, Aso);
+    vXOR4(BCu, Abu, Agu, Aku, Amu, Asu);
 
-        //thetaRhoPiChiIotaPrepareTheta(round  , A, E)
-        vROL(Da, BCe, 1);
-        vxor(Da, BCu, Da);
-        vROL(De, BCi, 1);
-        vxor(De, BCa, De);
-        vROL(Di, BCo, 1);
-        vxor(Di, BCe, Di);
-        vROL(Do, BCu, 1);
-        vxor(Do, BCi, Do);
-        vROL(Du, BCa, 1);
-        vxor(Du, BCo, Du);
+    //thetaRhoPiChiIotaPrepareTheta(round  , A, E)
+    vROL(Da, BCe, 1);
+    vxor(Da, BCu, Da);
+    vROL(De, BCi, 1);
+    vxor(De, BCa, De);
+    vROL(Di, BCo, 1);
+    vxor(Di, BCe, Di);
+    vROL(Do, BCu, 1);
+    vxor(Do, BCi, Do);
+    vROL(Du, BCa, 1);
+    vxor(Du, BCo, Du);
 
-        vxor(Aba, Aba, Da);
-        vxor(Age, Age, De);
-        vROL(BCe, Age, 44);
-        vxor(Aki, Aki, Di);
-        vROL(BCi, Aki, 43);
-        vxor(Amo, Amo, Do);
-        vROL(BCo, Amo, 21);
-        vxor(Asu, Asu, Du);
-        vROL(BCu, Asu, 14);
-        vXNA(Eba, Aba, BCe, BCi);
-        vxor(Eba, Eba, vdupq_n_u64(neon_KeccakF_RoundConstants[round]));
-        vXNA(Ebe, BCe, BCi, BCo);
-        vXNA(Ebi, BCi, BCo, BCu);
-        vXNA(Ebo, BCo, BCu, Aba);
-        vXNA(Ebu, BCu, Aba, BCe);
+    vxor(Aba, Aba, Da);
+    vxor(Age, Age, De);
+    vROL(BCe, Age, 44);
+    vxor(Aki, Aki, Di);
+    vROL(BCi, Aki, 43);
+    vxor(Amo, Amo, Do);
+    vROL(BCo, Amo, 21);
+    vxor(Asu, Asu, Du);
+    vROL(BCu, Asu, 14);
+    vXNA(Eba, Aba, BCe, BCi);
+    vxor(Eba, Eba, vdupq_n_u64(neon_KeccakF_RoundConstants[round]));
+    vXNA(Ebe, BCe, BCi, BCo);
+    vXNA(Ebi, BCi, BCo, BCu);
+    vXNA(Ebo, BCo, BCu, Aba);
+    vXNA(Ebu, BCu, Aba, BCe);
 
-        vxor(Abo, Abo, Do);
-        vROL(BCa, Abo, 28);
-        vxor(Agu, Agu, Du);
-        vROL(BCe, Agu, 20);
-        vxor(Aka, Aka, Da);
-        vROL(BCi, Aka, 3);
-        vxor(Ame, Ame, De);
-        vROL(BCo, Ame, 45);
-        vxor(Asi, Asi, Di);
-        vROL(BCu, Asi, 61);
-        vXNA(Ega, BCa, BCe, BCi);
-        vXNA(Ege, BCe, BCi, BCo);
-        vXNA(Egi, BCi, BCo, BCu);
-        vXNA(Ego, BCo, BCu, BCa);
-        vXNA(Egu, BCu, BCa, BCe);
+    vxor(Abo, Abo, Do);
+    vROL(BCa, Abo, 28);
+    vxor(Agu, Agu, Du);
+    vROL(BCe, Agu, 20);
+    vxor(Aka, Aka, Da);
+    vROL(BCi, Aka, 3);
+    vxor(Ame, Ame, De);
+    vROL(BCo, Ame, 45);
+    vxor(Asi, Asi, Di);
+    vROL(BCu, Asi, 61);
+    vXNA(Ega, BCa, BCe, BCi);
+    vXNA(Ege, BCe, BCi, BCo);
+    vXNA(Egi, BCi, BCo, BCu);
+    vXNA(Ego, BCo, BCu, BCa);
+    vXNA(Egu, BCu, BCa, BCe);
 
-        vxor(Abe, Abe, De);
-        vROL(BCa, Abe, 1);
-        vxor(Agi, Agi, Di);
-        vROL(BCe, Agi, 6);
-        vxor(Ako, Ako, Do);
-        vROL(BCi, Ako, 25);
-        vxor(Amu, Amu, Du);
-        vROL(BCo, Amu, 8);
-        vxor(Asa, Asa, Da);
-        vROL(BCu, Asa, 18);
-        vXNA(Eka, BCa, BCe, BCi);
-        vXNA(Eke, BCe, BCi, BCo);
-        vXNA(Eki, BCi, BCo, BCu);
-        vXNA(Eko, BCo, BCu, BCa);
-        vXNA(Eku, BCu, BCa, BCe);
+    vxor(Abe, Abe, De);
+    vROL(BCa, Abe, 1);
+    vxor(Agi, Agi, Di);
+    vROL(BCe, Agi, 6);
+    vxor(Ako, Ako, Do);
+    vROL(BCi, Ako, 25);
+    vxor(Amu, Amu, Du);
+    vROL(BCo, Amu, 8);
+    vxor(Asa, Asa, Da);
+    vROL(BCu, Asa, 18);
+    vXNA(Eka, BCa, BCe, BCi);
+    vXNA(Eke, BCe, BCi, BCo);
+    vXNA(Eki, BCi, BCo, BCu);
+    vXNA(Eko, BCo, BCu, BCa);
+    vXNA(Eku, BCu, BCa, BCe);
 
-        vxor(Abu, Abu, Du);
-        vROL(BCa, Abu, 27);
-        vxor(Aga, Aga, Da);
-        vROL(BCe, Aga, 36);
-        vxor(Ake, Ake, De);
-        vROL(BCi, Ake, 10);
-        vxor(Ami, Ami, Di);
-        vROL(BCo, Ami, 15);
-        vxor(Aso, Aso, Do);
-        vROL(BCu, Aso, 56);
-        vXNA(Ema, BCa, BCe, BCi);
-        vXNA(Eme, BCe, BCi, BCo);
-        vXNA(Emi, BCi, BCo, BCu);
-        vXNA(Emo, BCo, BCu, BCa);
-        vXNA(Emu, BCu, BCa, BCe);
+    vxor(Abu, Abu, Du);
+    vROL(BCa, Abu, 27);
+    vxor(Aga, Aga, Da);
+    vROL(BCe, Aga, 36);
+    vxor(Ake, Ake, De);
+    vROL(BCi, Ake, 10);
+    vxor(Ami, Ami, Di);
+    vROL(BCo, Ami, 15);
+    vxor(Aso, Aso, Do);
+    vROL(BCu, Aso, 56);
+    vXNA(Ema, BCa, BCe, BCi);
+    vXNA(Eme, BCe, BCi, BCo);
+    vXNA(Emi, BCi, BCo, BCu);
+    vXNA(Emo, BCo, BCu, BCa);
+    vXNA(Emu, BCu, BCa, BCe);
 
-        vxor(Abi, Abi, Di);
-        vROL(BCa, Abi, 62);
-        vxor(Ago, Ago, Do);
-        vROL(BCe, Ago, 55);
-        vxor(Aku, Aku, Du);
-        vROL(BCi, Aku, 39);
-        vxor(Ama, Ama, Da);
-        vROL(BCo, Ama, 41);
-        vxor(Ase, Ase, De);
-        vROL(BCu, Ase, 2);
-        vXNA(Esa, BCa, BCe, BCi);
-        vXNA(Ese, BCe, BCi, BCo);
-        vXNA(Esi, BCi, BCo, BCu);
-        vXNA(Eso, BCo, BCu, BCa);
-        vXNA(Esu, BCu, BCa, BCe);
+    vxor(Abi, Abi, Di);
+    vROL(BCa, Abi, 62);
+    vxor(Ago, Ago, Do);
+    vROL(BCe, Ago, 55);
+    vxor(Aku, Aku, Du);
+    vROL(BCi, Aku, 39);
+    vxor(Ama, Ama, Da);
+    vROL(BCo, Ama, 41);
+    vxor(Ase, Ase, De);
+    vROL(BCu, Ase, 2);
+    vXNA(Esa, BCa, BCe, BCi);
+    vXNA(Ese, BCe, BCi, BCo);
+    vXNA(Esi, BCi, BCo, BCu);
+    vXNA(Eso, BCo, BCu, BCa);
+    vXNA(Esu, BCu, BCa, BCe);
 
-        // Next Round
+    // Next Round
 
-        //    prepareTheta
-        vXOR4(BCa, Eba, Ega, Eka, Ema, Esa);
-        vXOR4(BCe, Ebe, Ege, Eke, Eme, Ese);
-        vXOR4(BCi, Ebi, Egi, Eki, Emi, Esi);
-        vXOR4(BCo, Ebo, Ego, Eko, Emo, Eso);
-        vXOR4(BCu, Ebu, Egu, Eku, Emu, Esu);
+    //    prepareTheta
+    vXOR4(BCa, Eba, Ega, Eka, Ema, Esa);
+    vXOR4(BCe, Ebe, Ege, Eke, Eme, Ese);
+    vXOR4(BCi, Ebi, Egi, Eki, Emi, Esi);
+    vXOR4(BCo, Ebo, Ego, Eko, Emo, Eso);
+    vXOR4(BCu, Ebu, Egu, Eku, Emu, Esu);
 
-        //thetaRhoPiChiIotaPrepareTheta(round+1, E, A)
-        vROL(Da, BCe, 1);
-        vxor(Da, BCu, Da);
-        vROL(De, BCi, 1);
-        vxor(De, BCa, De);
-        vROL(Di, BCo, 1);
-        vxor(Di, BCe, Di);
-        vROL(Do, BCu, 1);
-        vxor(Do, BCi, Do);
-        vROL(Du, BCa, 1);
-        vxor(Du, BCo, Du);
+    //thetaRhoPiChiIotaPrepareTheta(round+1, E, A)
+    vROL(Da, BCe, 1);
+    vxor(Da, BCu, Da);
+    vROL(De, BCi, 1);
+    vxor(De, BCa, De);
+    vROL(Di, BCo, 1);
+    vxor(Di, BCe, Di);
+    vROL(Do, BCu, 1);
+    vxor(Do, BCi, Do);
+    vROL(Du, BCa, 1);
+    vxor(Du, BCo, Du);
 
-        vxor(Eba, Eba, Da);
-        vxor(Ege, Ege, De);
-        vROL(BCe, Ege, 44);
-        vxor(Eki, Eki, Di);
-        vROL(BCi, Eki, 43);
-        vxor(Emo, Emo, Do);
-        vROL(BCo, Emo, 21);
-        vxor(Esu, Esu, Du);
-        vROL(BCu, Esu, 14);
-        vXNA(Aba, Eba, BCe, BCi);
-        vxor(Aba, Aba, vdupq_n_u64(neon_KeccakF_RoundConstants[round + 1]));
-        vXNA(Abe, BCe, BCi, BCo);
-        vXNA(Abi, BCi, BCo, BCu);
-        vXNA(Abo, BCo, BCu, Eba);
-        vXNA(Abu, BCu, Eba, BCe);
+    vxor(Eba, Eba, Da);
+    vxor(Ege, Ege, De);
+    vROL(BCe, Ege, 44);
+    vxor(Eki, Eki, Di);
+    vROL(BCi, Eki, 43);
+    vxor(Emo, Emo, Do);
+    vROL(BCo, Emo, 21);
+    vxor(Esu, Esu, Du);
+    vROL(BCu, Esu, 14);
+    vXNA(Aba, Eba, BCe, BCi);
+    vxor(Aba, Aba, vdupq_n_u64(neon_KeccakF_RoundConstants[round + 1]));
+    vXNA(Abe, BCe, BCi, BCo);
+    vXNA(Abi, BCi, BCo, BCu);
+    vXNA(Abo, BCo, BCu, Eba);
+    vXNA(Abu, BCu, Eba, BCe);
 
-        vxor(Ebo, Ebo, Do);
-        vROL(BCa, Ebo, 28);
-        vxor(Egu, Egu, Du);
-        vROL(BCe, Egu, 20);
-        vxor(Eka, Eka, Da);
-        vROL(BCi, Eka, 3);
-        vxor(Eme, Eme, De);
-        vROL(BCo, Eme, 45);
-        vxor(Esi, Esi, Di);
-        vROL(BCu, Esi, 61);
-        vXNA(Aga, BCa, BCe, BCi);
-        vXNA(Age, BCe, BCi, BCo);
-        vXNA(Agi, BCi, BCo, BCu);
-        vXNA(Ago, BCo, BCu, BCa);
-        vXNA(Agu, BCu, BCa, BCe);
+    vxor(Ebo, Ebo, Do);
+    vROL(BCa, Ebo, 28);
+    vxor(Egu, Egu, Du);
+    vROL(BCe, Egu, 20);
+    vxor(Eka, Eka, Da);
+    vROL(BCi, Eka, 3);
+    vxor(Eme, Eme, De);
+    vROL(BCo, Eme, 45);
+    vxor(Esi, Esi, Di);
+    vROL(BCu, Esi, 61);
+    vXNA(Aga, BCa, BCe, BCi);
+    vXNA(Age, BCe, BCi, BCo);
+    vXNA(Agi, BCi, BCo, BCu);
+    vXNA(Ago, BCo, BCu, BCa);
+    vXNA(Agu, BCu, BCa, BCe);
 
-        vxor(Ebe, Ebe, De);
-        vROL(BCa, Ebe, 1);
-        vxor(Egi, Egi, Di);
-        vROL(BCe, Egi, 6);
-        vxor(Eko, Eko, Do);
-        vROL(BCi, Eko, 25);
-        vxor(Emu, Emu, Du);
-        vROL(BCo, Emu, 8);
-        vxor(Esa, Esa, Da);
-        vROL(BCu, Esa, 18);
-        vXNA(Aka, BCa, BCe, BCi);
-        vXNA(Ake, BCe, BCi, BCo);
-        vXNA(Aki, BCi, BCo, BCu);
-        vXNA(Ako, BCo, BCu, BCa);
-        vXNA(Aku, BCu, BCa, BCe);
+    vxor(Ebe, Ebe, De);
+    vROL(BCa, Ebe, 1);
+    vxor(Egi, Egi, Di);
+    vROL(BCe, Egi, 6);
+    vxor(Eko, Eko, Do);
+    vROL(BCi, Eko, 25);
+    vxor(Emu, Emu, Du);
+    vROL(BCo, Emu, 8);
+    vxor(Esa, Esa, Da);
+    vROL(BCu, Esa, 18);
+    vXNA(Aka, BCa, BCe, BCi);
+    vXNA(Ake, BCe, BCi, BCo);
+    vXNA(Aki, BCi, BCo, BCu);
+    vXNA(Ako, BCo, BCu, BCa);
+    vXNA(Aku, BCu, BCa, BCe);
 
-        vxor(Ebu, Ebu, Du);
-        vROL(BCa, Ebu, 27);
-        vxor(Ega, Ega, Da);
-        vROL(BCe, Ega, 36);
-        vxor(Eke, Eke, De);
-        vROL(BCi, Eke, 10);
-        vxor(Emi, Emi, Di);
-        vROL(BCo, Emi, 15);
-        vxor(Eso, Eso, Do);
-        vROL(BCu, Eso, 56);
-        vXNA(Ama, BCa, BCe, BCi);
-        vXNA(Ame, BCe, BCi, BCo);
-        vXNA(Ami, BCi, BCo, BCu);
-        vXNA(Amo, BCo, BCu, BCa);
-        vXNA(Amu, BCu, BCa, BCe);
+    vxor(Ebu, Ebu, Du);
+    vROL(BCa, Ebu, 27);
+    vxor(Ega, Ega, Da);
+    vROL(BCe, Ega, 36);
+    vxor(Eke, Eke, De);
+    vROL(BCi, Eke, 10);
+    vxor(Emi, Emi, Di);
+    vROL(BCo, Emi, 15);
+    vxor(Eso, Eso, Do);
+    vROL(BCu, Eso, 56);
+    vXNA(Ama, BCa, BCe, BCi);
+    vXNA(Ame, BCe, BCi, BCo);
+    vXNA(Ami, BCi, BCo, BCu);
+    vXNA(Amo, BCo, BCu, BCa);
+    vXNA(Amu, BCu, BCa, BCe);
 
-        vxor(Ebi, Ebi, Di);
-        vROL(BCa, Ebi, 62);
-        vxor(Ego, Ego, Do);
-        vROL(BCe, Ego, 55);
-        vxor(Eku, Eku, Du);
-        vROL(BCi, Eku, 39);
-        vxor(Ema, Ema, Da);
-        vROL(BCo, Ema, 41);
-        vxor(Ese, Ese, De);
-        vROL(BCu, Ese, 2);
-        vXNA(Asa, BCa, BCe, BCi);
-        vXNA(Ase, BCe, BCi, BCo);
-        vXNA(Asi, BCi, BCo, BCu);
-        vXNA(Aso, BCo, BCu, BCa);
-        vXNA(Asu, BCu, BCa, BCe);
-    }
+    vxor(Ebi, Ebi, Di);
+    vROL(BCa, Ebi, 62);
+    vxor(Ego, Ego, Do);
+    vROL(BCe, Ego, 55);
+    vxor(Eku, Eku, Du);
+    vROL(BCi, Eku, 39);
+    vxor(Ema, Ema, Da);
+    vROL(BCo, Ema, 41);
+    vxor(Ese, Ese, De);
+    vROL(BCu, Ese, 2);
+    vXNA(Asa, BCa, BCe, BCi);
+    vXNA(Ase, BCe, BCi, BCo);
+    vXNA(Asi, BCi, BCo, BCu);
+    vXNA(Aso, BCo, BCu, BCa);
+    vXNA(Asu, BCu, BCa, BCe);
+  }
 
-    state[0] = Aba;
-    state[1] = Abe;
-    state[2] = Abi;
-    state[3] = Abo;
-    state[4] = Abu;
-    state[5] = Aga;
-    state[6] = Age;
-    state[7] = Agi;
-    state[8] = Ago;
-    state[9] = Agu;
-    state[10] = Aka;
-    state[11] = Ake;
-    state[12] = Aki;
-    state[13] = Ako;
-    state[14] = Aku;
-    state[15] = Ama;
-    state[16] = Ame;
-    state[17] = Ami;
-    state[18] = Amo;
-    state[19] = Amu;
-    state[20] = Asa;
-    state[21] = Ase;
-    state[22] = Asi;
-    state[23] = Aso;
-    state[24] = Asu;
+  state[0] = Aba;
+  state[1] = Abe;
+  state[2] = Abi;
+  state[3] = Abo;
+  state[4] = Abu;
+  state[5] = Aga;
+  state[6] = Age;
+  state[7] = Agi;
+  state[8] = Ago;
+  state[9] = Agu;
+  state[10] = Aka;
+  state[11] = Ake;
+  state[12] = Aki;
+  state[13] = Ako;
+  state[14] = Aku;
+  state[15] = Ama;
+  state[16] = Ame;
+  state[17] = Ami;
+  state[18] = Amo;
+  state[19] = Amu;
+  state[20] = Asa;
+  state[21] = Ase;
+  state[22] = Asi;
+  state[23] = Aso;
+  state[24] = Asu;
 }
 
 /*************************************************
@@ -358,18 +358,25 @@ static void keccakx2_absorb(v128 s[25],
                             uint8_t p)
 {
   size_t i, pos = 0;
-  uint64_t idx_mem[2] = {in1, in0};
-  v128 t, idx, tmp;
+  v128 t, idx;
 
-  for(i = 0; i < 25; ++i)
+  // Declare SIMD registers
+  v128 tmp, mask;
+  uint64x1_t a, b;
+  // End
+
+  for (i = 0; i < 25; ++i)
     s[i] = vdupq_n_u64(0);
 
-  idx = vload(idx_mem);
-  
-  while(inlen >= r) {
-    for(i = 0; i < r/8; ++i) {
-      t = _mm256_i64gather_epi64((long long *)pos, idx, 1);
-      s[i] = _mm256_xor_si256(s[i], t);
+  // Load in0[i] to register, then in1[i] to register, exchange them
+  while (inlen >= r)
+  {
+    for (i = 0; i < r / 8; ++i)
+    {
+      a = vld1_u64((uint64_t *)&in0[pos]);
+      b = vld1_u64((uint64_t *)&in1[pos]);
+      tmp = vcombine_u64(a, b);
+      vxor(s[i], s[i], tmp);
       pos += 8;
     }
 
@@ -378,26 +385,32 @@ static void keccakx2_absorb(v128 s[25],
   }
 
   i = 0;
-  while(inlen >= 8) {
-    t = _mm256_i64gather_epi64((long long *)pos, idx, 1);
-    s[i] = _mm256_xor_si256(s[i], t);
+  while (inlen >= 8)
+  {
+    a = vld1_u64((uint64_t *)&in0[pos]);
+    b = vld1_u64((uint64_t *)&in1[pos]);
+    tmp = vcombine_u64(a, b);
+    vxor(s[i], s[i], tmp);
 
     i++;
     pos += 8;
     inlen -= 8;
   }
 
-  if(inlen) {
-    t = _mm256_i64gather_epi64((long long *)pos, idx, 1);
-    idx = _mm256_set1_epi64x((1ULL << (8*inlen)) - 1);
-    t = _mm256_and_si256(t, idx);
-    s[i] = _mm256_xor_si256(s[i], t);
+  if (inlen)
+  {
+    a = vld1_u64((uint64_t *)&in0[pos]);
+    b = vld1_u64((uint64_t *)&in1[pos]);
+    tmp = vcombine_u64(a, b);
+    mask = vdupq_n_u64((1ULL << (8 * inlen)) - 1);
+    tmp = vandq_u64(tmp, mask);
+    vxor(s[i], s[i], tmp);
   }
 
-  t = _mm256_set1_epi64x((uint64_t)p << 8*inlen);
-  s[i] = _mm256_xor_si256(s[i], t);
-  t = _mm256_set1_epi64x(1ULL << 63);
-  s[r/8 - 1] = _mm256_xor_si256(s[r/8 - 1], t);
+  tmp = vdupq_n_u64((uint64_t)p << 8 * inlen);
+  vxor(s[i], s[i], tmp);
+  mask = vdupq_n_u64(1ULL << 63);
+  vxor(s[r / 8 - 1], s[r / 8 - 1], mask);
 }
 
 /*************************************************
@@ -418,15 +431,15 @@ static void keccak_squeezeblocks(uint8_t *out,
                                  unsigned int r)
 {
   unsigned int i;
-  while(nblocks > 0) {
+  while (nblocks > 0)
+  {
     KeccakF1600_StatePermute(s);
-    for(i=0;i<r/8;i++)
-      store64(out + 8*i, s[i]);
+    for (i = 0; i < r / 8; i++)
+      store64(out + 8 * i, s[i]);
     out += r;
     --nblocks;
   }
 }
-
 
 /*************************************************
 * Name:        shake128_absorb
@@ -506,19 +519,20 @@ void shake256_squeezeblocks(uint8_t *out, size_t nblocks, keccak_state *state)
 void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 {
   unsigned int i;
-  size_t nblocks = outlen/SHAKE128_RATE;
+  size_t nblocks = outlen / SHAKE128_RATE;
   uint8_t t[SHAKE128_RATE];
   keccak_state state;
 
   shake128_absorb(&state, in, inlen);
   shake128_squeezeblocks(out, nblocks, &state);
 
-  out += nblocks*SHAKE128_RATE;
-  outlen -= nblocks*SHAKE128_RATE;
+  out += nblocks * SHAKE128_RATE;
+  outlen -= nblocks * SHAKE128_RATE;
 
-  if(outlen) {
+  if (outlen)
+  {
     shake128_squeezeblocks(t, 1, &state);
-    for(i=0;i<outlen;i++)
+    for (i = 0; i < outlen; i++)
       out[i] = t[i];
   }
 }
@@ -536,19 +550,20 @@ void shake128(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 void shake256(uint8_t *out, size_t outlen, const uint8_t *in, size_t inlen)
 {
   unsigned int i;
-  size_t nblocks = outlen/SHAKE256_RATE;
+  size_t nblocks = outlen / SHAKE256_RATE;
   uint8_t t[SHAKE256_RATE];
   keccak_state state;
 
   shake256_absorb(&state, in, inlen);
   shake256_squeezeblocks(out, nblocks, &state);
 
-  out += nblocks*SHAKE256_RATE;
-  outlen -= nblocks*SHAKE256_RATE;
+  out += nblocks * SHAKE256_RATE;
+  outlen -= nblocks * SHAKE256_RATE;
 
-  if(outlen) {
+  if (outlen)
+  {
     shake256_squeezeblocks(t, 1, &state);
-    for(i=0;i<outlen;i++)
+    for (i = 0; i < outlen; i++)
       out[i] = t[i];
   }
 }
@@ -571,7 +586,7 @@ void sha3_256(uint8_t h[32], const uint8_t *in, size_t inlen)
   keccak_absorb(s, SHA3_256_RATE, in, inlen, 0x06);
   keccak_squeezeblocks(t, 1, s, SHA3_256_RATE);
 
-  for(i=0;i<32;i++)
+  for (i = 0; i < 32; i++)
     h[i] = t[i];
 }
 
@@ -593,6 +608,6 @@ void sha3_512(uint8_t *h, const uint8_t *in, size_t inlen)
   keccak_absorb(s, SHA3_512_RATE, in, inlen, 0x06);
   keccak_squeezeblocks(t, 1, s, SHA3_512_RATE);
 
-  for(i=0;i<64;i++)
+  for (i = 0; i < 64; i++)
     h[i] = t[i];
 }
