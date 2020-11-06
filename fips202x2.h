@@ -8,6 +8,12 @@ typedef uint64x2_t v128;
 
 #define FIPS202x2_NAMESPACE(s) pqcrystals_fips202x2_neon##s
 
+#define SHAKE128_RATE 168
+#define SHAKE256_RATE 136
+#define SHA3_256_RATE 136
+#define SHA3_512_RATE 72
+
+
 typedef struct {
   v128 s[25];
 } keccakx2_state;
