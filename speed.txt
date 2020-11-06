@@ -53,3 +53,9 @@ cothan@manjaro-rp4 ~/w/Keccak (main)> gcc neon_fips202.c -o neon_fips202 -O3 -g3
 cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
 NEON: 949899223
 FIPS: 442640898
+
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> gcc fips202x2.c fips202.c main.c -o neon_fips202 -O3 -g3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON: 941361090
+FIPS: 442355701

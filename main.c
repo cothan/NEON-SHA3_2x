@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <papi.h>
 #include <time.h>
+#include "fips202x2.h"
+#include "fips202.h"
 
 #define TESTS 10000000
 #define ROL(a, offset) ((a << offset) ^ (a >> (64-offset)))
