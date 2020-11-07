@@ -362,6 +362,7 @@ static void keccakx2_absorb(v128 s[25],
   // Declare SIMD registers
   v128 tmp, mask;
   uint64x1_t a, b;
+  uint64x2_t a1, b1, atmp1, btmp1;
   uint64x2x2_t a2, b2, atmp2, btmp2;
   // End
 
@@ -402,7 +403,24 @@ static void keccakx2_absorb(v128 s[25],
   }
 
   i = 0;
-  while (inlen >= 8)
+  while (inlen >= 16)
+  {
+    a1 = vld1q_u64((uint64_t *)&in0[pos]);
+    b1 = vld1q_u64((uint64_t *)&in1[pos]);
+    // BD = zip1(AB and CD)
+    atmp1 = vzip1q_u64(a1, b1);
+    // AC = zip2(AB and CD)
+    btmp1 = vzip2q_u64(a1, b1);
+
+    vxor(s[i + 0], s[i + 0], atmp1);
+    vxor(s[i + 1], s[i + 1], btmp1);
+    
+    i+=2;
+    pos += 8*2;
+    inlen -= 8*2;
+  }
+
+  if (inlen >= 8)
   {
     a = vld1_u64((uint64_t *)&in0[pos]);
     b = vld1_u64((uint64_t *)&in1[pos]);
@@ -413,7 +431,7 @@ static void keccakx2_absorb(v128 s[25],
     pos += 8;
     inlen -= 8;
   }
-
+  
   if (inlen)
   {
     a = vld1_u64((uint64_t *)&in0[pos]);
@@ -457,7 +475,7 @@ static void keccakx2_squeezeblocks(uint8_t *out0,
   while (nblocks > 0)
   {
     KeccakF1600_StatePermutex2(s);
-    
+
     for (i = 0; i < r / 8 - 1; i += 4)
     {
       a2.val[0] = vuzp1q_u64(s[i], s[i + 1]);
@@ -474,9 +492,12 @@ static void keccakx2_squeezeblocks(uint8_t *out0,
     i = r / 8 - 1;
     // Last iteration
     a = vget_low_u64(s[i]);
-    b = vget_high_u64(s[i]);    
+    b = vget_high_u64(s[i]);
     vst1_u64((uint64_t *)out0, a);
     vst1_u64((uint64_t *)out1, b);
+
+    out0 += 8;
+    out1 += 8;
 
     --nblocks;
   }
