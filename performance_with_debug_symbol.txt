@@ -1,0 +1,33 @@
+cothan@manjaro-rp4 ~/w/Keccak (main) [SIGINT]> gcc fips202x2.c fips202.c graph.c -o neon_fips202 -O3 -g3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+BENCHMARK SHAKE128:
+[2, 1], [100.911089, 57.185025]
+[2, 2], [100.613925, 57.197556]
+[2, 4], [100.604893, 57.128760]
+[2, 8], [100.596459, 58.163156]
+[2, 16], [102.042067, 57.975285]
+[2, 32], [102.329915, 58.074056]
+[2, 64], [102.904778, 58.021505]
+[2, 128], [103.488187, 58.360751]
+[2, 256], [198.752410, 107.972160]
+[2, 512], [392.639327, 210.435703]
+[2, 1024], [683.287733, 356.832443]
+
+
+[2, 2048], [1256.977025, 654.677024]
+^C⏎                                                                                                                                                                                                                                         cothan@manjaro-rp4 ~/w/Keccak (main) [SIGINT]> 
+cothan@manjaro-rp4 ~/w/Keccak (main) [SIGINT]> 
+cothan@manjaro-rp4 ~/w/Keccak (main) [SIGINT]> gcc fips202x2.c fips202.c graph.c -o neon_fips202 -O3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+BENCHMARK SHAKE128:
+[2, 1], [100.263596, 57.284096]
+[2, 2], [100.224098, 57.310368]
+[2, 4], [100.265264, 57.219045]
+[2, 8], [100.162128, 57.148508]
+[2, 16], [100.238798, 57.129406]
+[2, 32], [100.383714, 57.201132]
+[2, 64], [100.803506, 57.359402]
+[2, 128], [101.696023, 57.498532]
+[2, 256], [197.654170, 107.867522]
+[2, 512], [389.146398, 207.520676]
+[2, 1024], [678.650167, 357.336757]
