@@ -362,6 +362,7 @@ static void keccakx2_absorb(v128 s[25],
   // Declare SIMD registers
   v128 tmp, mask;
   uint64x1_t a, b;
+  uint64x2x2_t a2, b2, atmp2, btmp2;
   // End
 
   for (i = 0; i < 25; ++i)
@@ -370,14 +371,31 @@ static void keccakx2_absorb(v128 s[25],
   // Load in0[i] to register, then in1[i] to register, exchange them
   while (inlen >= r)
   {
-    for (i = 0; i < r / 8; ++i)
+    for (i = 0; i < r / 8 - 1; i += 4)
     {
-      a = vld1_u64((uint64_t *)&in0[pos]);
-      b = vld1_u64((uint64_t *)&in1[pos]);
-      tmp = vcombine_u64(a, b);
-      vxor(s[i], s[i], tmp);
-      pos += 8;
+      a2 = vld1q_u64_x2((uint64_t *)&in0[pos]);
+      b2 = vld1q_u64_x2((uint64_t *)&in1[pos]);
+      // BD = zip1(AB and CD)
+      atmp2.val[0] = vzip1q_u64(a2.val[0], b2.val[0]);
+      atmp2.val[1] = vzip1q_u64(a2.val[1], b2.val[1]);
+      // AC = zip2(AB and CD)
+      btmp2.val[0] = vzip2q_u64(a2.val[0], b2.val[0]);
+      btmp2.val[1] = vzip2q_u64(a2.val[1], b2.val[1]);
+
+      vxor(s[i + 0], s[i + 0], atmp2.val[0]);
+      vxor(s[i + 1], s[i + 1], btmp2.val[0]);
+      vxor(s[i + 2], s[i + 2], atmp2.val[1]);
+      vxor(s[i + 3], s[i + 3], btmp2.val[1]);
+
+      pos += 8 * 2 * 2;
     }
+    // Last iteration
+    i = r / 8 - 1;
+    a = vld1_u64((uint64_t *)&in0[pos]);
+    b = vld1_u64((uint64_t *)&in1[pos]);
+    tmp = vcombine_u64(a, b);
+    vxor(s[i], s[i], tmp);
+    pos += 8;
 
     KeccakF1600_StatePermutex2(s);
     inlen -= r;
@@ -406,8 +424,9 @@ static void keccakx2_absorb(v128 s[25],
     vxor(s[i], s[i], tmp);
   }
 
-  tmp = vdupq_n_u64((uint64_t)p << 8 * inlen);
+  tmp = vdupq_n_u64((uint64_t)p << (8 * inlen));
   vxor(s[i], s[i], tmp);
+
   mask = vdupq_n_u64(1ULL << 63);
   vxor(s[r / 8 - 1], s[r / 8 - 1], mask);
 }
@@ -431,21 +450,33 @@ static void keccakx2_squeezeblocks(uint8_t *out0,
                                    v128 s[25])
 {
   unsigned int i;
+
   uint64x1_t a, b;
+  uint64x2x2_t a2, b2;
 
   while (nblocks > 0)
   {
     KeccakF1600_StatePermutex2(s);
-    for (i = 0; i < r / 8; ++i)
+    
+    for (i = 0; i < r / 8 - 1; i += 4)
     {
-      a = vget_low_u64(s[i]);
-      b = vget_high_u64(s[i]);
-      vst1_u64((uint64_t *)&out0[8 * i], a);
-      vst1_u64((uint64_t *)&out1[8 * i], b);
+      a2.val[0] = vuzp1q_u64(s[i], s[i + 1]);
+      b2.val[0] = vuzp2q_u64(s[i], s[i + 1]);
+      a2.val[1] = vuzp1q_u64(s[i + 2], s[i + 3]);
+      b2.val[1] = vuzp2q_u64(s[i + 2], s[i + 3]);
+      vst1q_u64_x2((uint64_t *)out0, a2);
+      vst1q_u64_x2((uint64_t *)out1, b2);
 
-      out0 += 8;
-      out1 += 8;
+      out0 += 32;
+      out1 += 32;
     }
+
+    i = r / 8 - 1;
+    // Last iteration
+    a = vget_low_u64(s[i]);
+    b = vget_high_u64(s[i]);    
+    vst1_u64((uint64_t *)out0, a);
+    vst1_u64((uint64_t *)out1, b);
 
     --nblocks;
   }
