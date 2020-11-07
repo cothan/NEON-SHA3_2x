@@ -358,7 +358,6 @@ static void keccakx2_absorb(v128 s[25],
                             uint8_t p)
 {
   size_t i, pos = 0;
-  v128 t, idx;
 
   // Declare SIMD registers
   v128 tmp, mask;
@@ -631,11 +630,11 @@ void sha3_256x2(uint8_t h1[32],
   keccakx2_absorb(s, SHA3_256_RATE, in1, in2, inlen, 0x06);
   keccakx2_squeezeblocks(t1, t2, 1, SHA3_256_RATE, s);
 
-  for (i = 0; i < 32; i++)
-  {
-    h1[i] = t1[i];
-    h2[i] = t2[i];
-  }
+  uint8x16x2_t a, b;
+  a = vld1q_u8_x2(t1);
+  b = vld1q_u8_x2(t2);
+  vst1q_u8_x2(h1, a);
+  vst1q_u8_x2(h2, b);
 }
 
 /*************************************************
@@ -653,7 +652,6 @@ void sha3_512x2(uint8_t h1[64],
                 const uint8_t *in2,
                 size_t inlen)
 {
-  unsigned int i;
   v128 s[25];
   uint8_t t1[SHA3_512_RATE];
   uint8_t t2[SHA3_512_RATE];
@@ -661,9 +659,9 @@ void sha3_512x2(uint8_t h1[64],
   keccakx2_absorb(s, SHA3_512_RATE, in1, in2, inlen, 0x06);
   keccakx2_squeezeblocks(t1, t2, 1, SHA3_512_RATE, s);
 
-  for (i = 0; i < 64; i++)
-  {
-    h1[i] = t1[i];
-    h2[i] = t2[i];
-  }
+  uint8x16x4_t a, b;
+  a = vld1q_u8_x4(t1);
+  b = vld1q_u8_x4(t2);
+  vst1q_u8_x4(h1, a);
+  vst1q_u8_x4(h2, b);
 }
