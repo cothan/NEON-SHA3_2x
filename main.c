@@ -45,7 +45,8 @@ int main()
                 shake128x2(out1, out2, ol, in1, in2, il);
             }
             end = PAPI_get_real_cyc();
-            printf("NEON: %lld\n", end - start);
+            // printf("NEON: %lld/operation\n", (end - start)/TESTS);
+            printf("NEON: %f cyc/operation\n", ((double) (end - start) )/TESTS);
 
             start = PAPI_get_real_cyc();
             for (int j = 0; j < TESTS; j++)
@@ -53,7 +54,8 @@ int main()
                 shake128(out_gold, ol, in_gold, il);
             }
             end = PAPI_get_real_cyc();
-            printf("FIPS: %lld\n", end - start);
+            // printf("FIPS: %lld/operation\n", (end - start)/TESTS);
+            printf("FIPS: %f cyc/operation\n", ((double) (end - start) )/TESTS);
 
             int check = 0;
             uint8_t m, n;
