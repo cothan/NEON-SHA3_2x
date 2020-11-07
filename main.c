@@ -6,8 +6,8 @@
 #include "fips202.h"
 
 #define TESTS 1
-#define OUTLENGTH 100
-#define INLENGTH 123
+#define OUTLENGTH 2000
+#define INLENGTH 2000
 
 int main()
 {
@@ -29,47 +29,54 @@ int main()
     }
     long_long start, end;
 
-    start = PAPI_get_real_cyc();
-    for (int j = 0; j < TESTS; j++)
+    for (int ol = 1; ol < OUTLENGTH; ol++)
     {
-        shake128x2(out1, out2, OUTLENGTH, in1, in2, INLENGTH);
-    }
-    end = PAPI_get_real_cyc();
-    printf("NEON: %lld\n", end - start);
-
-    start = PAPI_get_real_cyc();
-    for (int j = 0; j < TESTS; j++)
-    {
-        shake128(out_gold, OUTLENGTH, in_gold, INLENGTH);
-    }
-    end = PAPI_get_real_cyc();
-    printf("FIPS: %lld\n", end - start);
-
-    int check = 0;
-    uint8_t m, n;
-
-    for (int i = 0; i < OUTLENGTH; i += 8)
-    {
-        for (int j = i; j < i + 8; j++)
+        for (int il = 1; il < INLENGTH; il++)
         {
-            m = out_gold[j];
-            n = out1[j];
-            if (out_gold[j] != out1[j])
+            start = PAPI_get_real_cyc();
+            for (int j = 0; j < TESTS; j++)
             {
-                printf("![%2d] %2x != %2x\n", j,  m, n);
-                check++;
+                shake128x2(out1, out2, ol, in1, in2, il);
             }
-            else
-            {
-                printf("+[%2d] %2x == %2x\n", j,  m, n);
-            }
-            
-        }
+            end = PAPI_get_real_cyc();
+            // printf("NEON: %lld\n", end - start);
 
-        if (check == 8)
-        {
-            printf("ERROR! %d\n", i);
-            return 1;
+            start = PAPI_get_real_cyc();
+            for (int j = 0; j < TESTS; j++)
+            {
+                shake128(out_gold, ol, in_gold, il);
+            }
+            end = PAPI_get_real_cyc();
+            // printf("FIPS: %lld\n", end - start);
+
+            int check = 0;
+            uint8_t m, n;
+
+            // for (int i = 0; i < OUTLENGTH - 8; i += 8)
+            for (int i = 0; i < ol - 8; i += 8)
+            {
+                for (int j = i; j < i + 8; j++)
+                {
+                    m = out_gold[j];
+                    n = out1[j];
+                    if (out_gold[j] != out1[j])
+                    {
+                        printf("![%2d] %2x != %2x  ?? %2x\n", j, m, n, out2[j]);
+                        check++;
+                    }
+                    else
+                    {
+                        // printf("+[%2d] %2x == %2x ?? %2x\n", j, m, n, out2[j]);
+                    }
+                }
+
+                if (check)
+                {
+                    printf("%d %d ERROR! %d\n", ol, il, i);
+                    // printf("ERROR! %d\n", i);
+                    return 1;
+                }
+            }
         }
     }
 
