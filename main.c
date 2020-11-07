@@ -5,9 +5,10 @@
 #include "fips202x2.h"
 #include "fips202.h"
 
-#define TESTS 1
-#define OUTLENGTH 2000
-#define INLENGTH 2000
+#define TESTS 1000000
+#define OUTLENGTH SHAKE128_RATE*10
+#define INLENGTH SHAKE128_RATE
+#define BRUTE 0
 
 int main()
 {
@@ -29,17 +30,22 @@ int main()
     }
     long_long start, end;
 
+#if BRUTE
     for (int ol = 1; ol < OUTLENGTH; ol++)
     {
         for (int il = 1; il < INLENGTH; il++)
         {
+#else
+    int ol = OUTLENGTH;
+    int il = INLENGTH;
+#endif 
             start = PAPI_get_real_cyc();
             for (int j = 0; j < TESTS; j++)
             {
                 shake128x2(out1, out2, ol, in1, in2, il);
             }
             end = PAPI_get_real_cyc();
-            // printf("NEON: %lld\n", end - start);
+            printf("NEON: %lld\n", end - start);
 
             start = PAPI_get_real_cyc();
             for (int j = 0; j < TESTS; j++)
@@ -47,7 +53,7 @@ int main()
                 shake128(out_gold, ol, in_gold, il);
             }
             end = PAPI_get_real_cyc();
-            // printf("FIPS: %lld\n", end - start);
+            printf("FIPS: %lld\n", end - start);
 
             int check = 0;
             uint8_t m, n;
@@ -77,8 +83,10 @@ int main()
                     return 1;
                 }
             }
+#if BRUTE
         }
     }
+#endif 
 
     printf("CORRECT!\n");
 
