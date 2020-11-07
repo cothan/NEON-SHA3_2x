@@ -753,7 +753,7 @@ void KeccakF1600_StatePermutex2_rename(v128 state[25])
 *              - uint8_t p: domain-separation byte for different
 *                           Keccak-derived functions
 **************************************************/
-static inline __attribute__((always_inline))
+static inline //__attribute__((always_inline))
 void keccakx2_absorb(v128 s[25],
                                    unsigned int r,
                                    const uint8_t *in0,
@@ -803,9 +803,9 @@ void keccakx2_absorb(v128 s[25],
     vxor(s[i], s[i], tmp);
     pos += 8;
 
-    // KeccakF1600_StatePermutex2(s);
+    KeccakF1600_StatePermutex2(s);
     // KeccakF1600_StatePermutex2_rename(s);
-    KeccakF1600_StatePermutex2_macro(s, Estate, Bstate, Dstate);
+    // KeccakF1600_StatePermutex2_macro(s, Estate, Bstate, Dstate);
     inlen -= r;
   }
 
@@ -868,7 +868,7 @@ void keccakx2_absorb(v128 s[25],
 *              - unsigned int r: rate in bytes (e.g., 168 for SHAKE128)
 *              - uint64_t *s: pointer to input/output Keccak state
 **************************************************/
-static inline __attribute__((always_inline))
+static inline //__attribute__((always_inline))
 void keccakx2_squeezeblocks(uint8_t *out0,
                                           uint8_t *out1,
                                           size_t nblocks,
@@ -883,9 +883,9 @@ void keccakx2_squeezeblocks(uint8_t *out0,
 
   while (nblocks > 0)
   {
-    // KeccakF1600_StatePermutex2(s);
+    KeccakF1600_StatePermutex2(s);
     // KeccakF1600_StatePermutex2_rename(s);
-    KeccakF1600_StatePermutex2_macro(s, Estate, Bstate, Dstate);
+    // KeccakF1600_StatePermutex2_macro(s, Estate, Bstate, Dstate); // slow
 
 
     for (i = 0; i < r / 8 - 1; i += 4)
