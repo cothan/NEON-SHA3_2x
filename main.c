@@ -8,7 +8,13 @@
 #define TESTS 1000000
 #define OUTLENGTH 4096
 #define INLENGTH 4096
-#define BRUTE 1
+
+/*
+Compile flags:
+gcc fips202x2.c fips202.c main.c -o neon_fips202 -O3 -g3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize
+*/
+
+
 
 int compare(uint8_t *out_gold, uint8_t *out1, uint8_t *out2, int ol)
 {
