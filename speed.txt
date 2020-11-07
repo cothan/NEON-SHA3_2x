@@ -59,3 +59,27 @@ cothan@manjaro-rp4 ~/w/Keccak (main)> gcc fips202x2.c fips202.c main.c -o neon_f
 cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
 NEON: 941361090
 FIPS: 442355701
+
+
+
+
+
+    // KeccakF1600_StatePermutex2_rename(s);
+
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON: 1260362769
+FIPS: 538547629
+
+    
+    BEST 
+    KeccakF1600_StatePermutex2(s);
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON: 1068401092
+FIPS: 538947527
+
+
+    // KeccakF1600_StatePermutex2_macro(s, Estate, Bstate, Dstate); // slow
+cothan@manjaro-rp4 ~/w/Keccak (main)> ./neon_fips202
+NEON: 1259680659
+FIPS: 538558652
+CORRECT!
