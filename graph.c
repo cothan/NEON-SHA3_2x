@@ -14,7 +14,7 @@ Compile flags:
 gcc fips202x2.c fips202.c graph.c -o neon_fips202 -O3 -g3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize
 */
 
-int compare(uint8_t *out_gold, uint8_t *out1, uint8_t *out2, int ol)
+int compare(uint8_t *out_gold, uint8_t *out, int ol)
 {
     int check = 0;
     uint8_t m, n;
@@ -24,10 +24,10 @@ int compare(uint8_t *out_gold, uint8_t *out1, uint8_t *out2, int ol)
         for (int j = i; j < i + 8; j++)
         {
             m = out_gold[j];
-            n = out1[j];
-            if (out_gold[j] != out1[j])
+            n = out[j];
+            if (out_gold[j] != out[j])
             {
-                printf("![%2d] %2x != %2x  ?? %2x\n", j, m, n, out2[j]);
+                printf("![%2d] %2x != %2x\n", j, m, n);
                 check++;
             }
         }
@@ -42,8 +42,10 @@ int compare(uint8_t *out_gold, uint8_t *out1, uint8_t *out2, int ol)
 }
 
 int bench(void func(), void funcx2(),
-          uint8_t *out_gold, uint8_t *out1, uint8_t *out2, int ol,
-          uint8_t *in_gold, uint8_t *in1, uint8_t *in2, int il,
+          uint8_t *out_gold1, uint8_t *out_gold2,
+          uint8_t *out1, uint8_t *out2, int ol,
+          uint8_t *in_gold1, uint8_t *in_gold2, 
+          uint8_t *in1, uint8_t *in2, int il,
           double *fa, double *fb)
 {
     uint64_t a, b;
@@ -56,7 +58,8 @@ int bench(void func(), void funcx2(),
         b = (b << 32) | rand();
         in1[i] = a;
         in2[i] = b;
-        in_gold[i] = a;
+        in_gold1[i] = a;
+        in_gold2[i] = b;
     }
 
     long_long start, end;
@@ -73,7 +76,8 @@ int bench(void func(), void funcx2(),
     start = PAPI_get_real_cyc();
     for (int j = 0; j < TESTS; j++)
     {
-        func(out_gold, ol, in_gold, il);
+        func(out_gold1, ol, in_gold1, il);
+        func(out_gold2, ol, in_gold1, il);
     }
     end = PAPI_get_real_cyc();
 
@@ -83,7 +87,7 @@ int bench(void func(), void funcx2(),
     *fa = neon;
     *fb = fips;
 
-    if (compare(out_gold, out1, out2, ol))
+    if (compare(out_gold1, out1, ol) && compare(out_gold2, out2, ol))
         return 1;
 
     return 0;
@@ -93,7 +97,8 @@ int bench_shake128()
 {
     uint8_t out1[OUTLENGTH], out2[OUTLENGTH];
     uint8_t in1[INLENGTH], in2[INLENGTH];
-    uint8_t out_gold[OUTLENGTH], in_gold[INLENGTH];
+    uint8_t out_gold1[OUTLENGTH], in_gold1[INLENGTH],
+            out_gold2[OUTLENGTH], in_gold2[INLENGTH];
     double fa, fb;
 
     int ret;
@@ -123,7 +128,8 @@ int bench_shake256()
 {
     uint8_t out1[OUTLENGTH], out2[OUTLENGTH];
     uint8_t in1[INLENGTH], in2[INLENGTH];
-    uint8_t out_gold[OUTLENGTH], in_gold[INLENGTH];
+    uint8_t out_gold1[OUTLENGTH], in_gold1[INLENGTH],
+            out_gold2[OUTLENGTH], in_gold2[INLENGTH];
     double fa, fb;
 
     int ret;
