@@ -8,10 +8,12 @@ https://github.com/XKCP/XKCP/tree/master/lib/low/KeccakP-1600-times2/SIMD128[Sin
 The result is not impressive, due to 2 reasons: 
 
 SHA3 uses native bit-wise operation like AND, NOT, XOR, those operation only take about 1 cycle in CPU, therefore:
+
 * No pipeline happen
 * No significant improvement if SIMD bitwidth is 128-bit, ARMv8 native register width is 64-bit, I suppose frequency in NEON mode is slower than Scalar mode. (I don't know the term for this, please let me know)
 
 This code can be faster than this benchmark if:
+
 - SIMD register bitwidth is wider, 256, 512, etc... 
 - Frequency in NEON mode is at least > 0.5 * Scalar mode
 
@@ -78,7 +80,7 @@ You can view the full result in: `data/`
 
 == Conclusion 
 
-The Keccak2x NEON version is *always faster* than 2 time Keccak. 
+The Keccak2x NEON version is *always faster* than 2 times Keccak C version. See https://github.com/cothan/NEON-SHA3_2x/blob/main/benchmark_rate.c#L63[bench() function]
 
 - If you only call Keccak *once*, use C version, it's faster
 - If you call Keccak *multiple times*, use *NEON* version, it's save sometimes.
