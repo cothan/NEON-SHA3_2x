@@ -14,8 +14,8 @@ SHA3 uses native bit-wise operation like AND, NOT, XOR, those operation only tak
 
 This code can be faster than this benchmark if:
 
-- SIMD register bitwidth is wider, 256, 512, etc... 
-- Frequency in NEON mode is at least > 0.5 * Scalar mode
+- SIMD register bitwidth is *wider*: e.g 256, 512, ...
+- Frequency in NEON mode is at least > 0.5 * (Scalar frequency)
 
 == Result 
 
@@ -76,7 +76,7 @@ taskset 0x1 ./benchmark_SHAKE128_256_1000.bin
 
 The result above iterate 1000 time. As set in `#define TESTS 1000`
 
-You can view the full result in: `data/`
+You can view the full result, iterate *1,000* or *1,000,000* times in: `data/`
 
 == Conclusion 
 
