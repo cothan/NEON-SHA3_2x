@@ -65,7 +65,7 @@ taskset 0x1 ./benchmark_SHAKE128_256_1000.bin
 
 .Result
 |===
-| Output Length | Input Length | FIPS202x2 (NEON) | FIPS202x2 (C)
+| Output Length | Input Length | FIPS202x2 NEON | FIPS202x2 C
 | 42 | 672 | 487 | 514
 | 294 | 336 | 390 | 413
 | 1008 | 42 | 586 | 606
