@@ -1,0 +1,86 @@
+= NEON ARMv8 SHA3_2x
+:kroki-fetch-diagram:
+
+== NEON ARMv8 Keccak2x Implementation. 
+
+https://github.com/XKCP/XKCP/tree/master/lib/low/KeccakP-1600-times2/SIMD128[Since there is no SIMD128 for ARMv8], so I decide to implement one. 
+
+The result is not impressive, due to 2 reasons: 
+
+SHA3 uses native bit-wise operation like AND, NOT, XOR, those operation only take about 1 cycle in CPU, therefore:
+* No pipeline happen
+* No significant improvement if SIMD bitwidth is 128-bit, ARMv8 native register width is 64-bit, I suppose frequency in NEON mode is slower than Scalar mode. (I don't know the term for this, please let me know)
+
+This code can be faster than this benchmark if:
+- SIMD register bitwidth is wider, 256, 512, etc... 
+- Frequency in NEON mode is at least > 0.5 * Scalar mode
+
+== Result 
+
+=== System Information 
+Here is my benchmark on ARMv8 Raspberry Pi 64-bit Majaro:
+
+.OS
+----
+Distributor ID: Manjaro-ARM
+Description:    Manjaro ARM Linux
+Release:        20.10
+----
+
+.CPU
+----
+Architecture:                    aarch64
+CPU op-mode(s):                  32-bit, 64-bit
+Byte Order:                      Little Endian
+CPU(s):                          4
+On-line CPU(s) list:             0-3
+Thread(s) per core:              1
+Core(s) per socket:              4
+Socket(s):                       1
+Vendor ID:                       ARM
+Model:                           3
+Model name:                      Cortex-A72
+Stepping:                        r0p3
+CPU max MHz:                     1900.0000
+CPU min MHz:                     600.0000
+Flags:                           fp asimd evtstrm crc32 cpuid
+----
+
+I overclocked Raspberry Pi to 1900 Mhz. 
+The default CPU frequency is 1500 Mhz. 
+
+=== Result 
+
+All benchmarks were run via this command:
+
+[source,bash]
+----
+make all
+taskset 0x1 ./benchmark_SHAKE128_256_1000.bin
+----
+
+`taskset` command pin process to only 1 CPU, avoid cost in switching CPU
+
+.Result
+|===
+| Output Length | Input Length | FIPS202x2 (NEON) | FIPS202x2 (C)
+| 42 | 672 | 487 | 514
+| 294 | 336 | 390 | 413
+| 1008 | 42 | 586 | 606
+| 2772 | 1008 |  2228 | 2287
+| 3318 | 504 | 2230 | 2286
+| 4074 | 1008 | 3004 | 3099
+|===
+
+The result above iterate 1000 time. As set in `#define TESTS 1000`
+
+You can view the full result in: `data/`
+
+== Conclusion 
+
+The Keccak2x NEON version is *always faster* than 2 time Keccak. 
+
+- If you only call Keccak *once*, use C version, it's faster
+- If you call Keccak *multiple times*, use *NEON* version, it's save sometimes.
+
+
