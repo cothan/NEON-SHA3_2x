@@ -1,0 +1,6 @@
+.vscode/*
+callgrind.out.*
+bench_rate_neon_fips202
+bench_state_neon_fips202
+libsha3x2_neon.so
+libsha3.so
