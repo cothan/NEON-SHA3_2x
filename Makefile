@@ -1,5 +1,5 @@
 CC ?= /usr/bin/gcc
-CFLAGS += -O3 -lpapi -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize   
+CFLAGS += -O3 -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize -lpapi
 RM = /bin/rm
 
 SOURCES = fips202x2.c fips202.c
