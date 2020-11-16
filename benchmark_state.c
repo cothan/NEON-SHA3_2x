@@ -44,8 +44,7 @@ int compare(uint8_t *out_gold, uint8_t *out1, uint8_t *out2, int ol)
 
 int bench(void func(), void funcx2(),
           uint8_t *out_gold, uint8_t *out1, uint8_t *out2, int ol,
-          uint8_t *in_gold, uint8_t *in1, uint8_t *in2, int il,
-          const char *string)
+          uint8_t *in_gold, uint8_t *in1, uint8_t *in2, int il)
 {
     uint64_t a, b;
 
@@ -97,7 +96,7 @@ int bench_shake128()
     {
         for (int il = 0; STATE_SIZE < INLENGTH; il += STATE_SIZE)
         {
-            ret = bench(func, funcx2, out_gold, out1, out2, ol, in_gold, in1, in2, il, "BENCHMARK SHAKE128");
+            ret = bench(func, funcx2, out_gold, out1, out2, ol, in_gold, in1, in2, il);
             printf("[%d, %d]\n", ol, il);
             if (ret)
             {
@@ -126,7 +125,7 @@ int bench_shake256()
     {
         for (int il = STATE_SIZE; il < INLENGTH; il += STATE_SIZE)
         {
-            ret = bench(func, funcx2, out_gold, out1, out2, ol, in_gold, in1, in2, il, "BENCHMARK SHAKE256");
+            ret = bench(func, funcx2, out_gold, out1, out2, ol, in_gold, in1, in2, il);
             printf("[%d, %d]\n", ol, il);
             if (ret)
             {
