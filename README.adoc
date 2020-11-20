@@ -17,6 +17,16 @@ This code can be faster than this benchmark if:
 - SIMD register bitwidth is *wider*: e.g 256, 512, ...
 - Frequency in NEON mode is at least > 0.5 * (Scalar frequency)
 
+== What is inside this package? 
+
+NEON (ASIMD) ARMv8 implementation of:
+
+- KeccakP-1600
+- SHAKE128 : Absorb, Squeeze
+- SHAKE256 : Absorb, Squeeze
+- SHA3_256
+- SHA3_512
+
 == Result 
 
 === System Information 
@@ -77,6 +87,23 @@ taskset 0x1 ./benchmark_SHAKE128_256_1000.bin
 The result above iterate 1000 time. As set in `#define TESTS 1000`
 
 You can view the full result, iterate *1,000* or *1,000,000* times in: `data/`
+
+=== Graph 
+
+If the `data/` is confuse to you, here is some graphs:
+
+image:graph/shake128.svg[]
+
+image:graph/shake256.svg[]
+
+- The orange line is the differences between C reference code and NEON implementation
+
+- The green line is average of 24 samples for `C_ref - NEON` 
+
+* Orange: `C_ref - NEON`
+* Green: average of `C_ref - NEON`
+
+You can notice that in some case, `C Ref` is better than `NEON`. For small output length, `NEON` is better than `C Ref` at about `5%`.
 
 == Conclusion 
 
