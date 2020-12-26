@@ -9,7 +9,7 @@ The result is not impressive, due to 2 reasons:
 
 SHA3 uses native bit-wise operation like AND, NOT, XOR, those operation only take about 1 cycle in CPU, therefore:
 
-* No pipeline happen
+* No pipeline happens
 * No significant improvement if SIMD bitwidth is 128-bit, ARMv8 native register width is 64-bit, I suppose frequency in NEON mode is slower than Scalar mode. (I don't know the term for this, please let me know)
 
 This code can be faster than this benchmark if:
@@ -71,7 +71,7 @@ make all
 taskset 0x1 ./benchmark_SHAKE128_256_1000.bin
 ----
 
-`taskset` command pin process to only 1 CPU, avoid cost in switching CPU
+`taskset` command pin process to only 1 CPU, avoid switching CPU cost 
 
 .Result
 |===
@@ -110,6 +110,6 @@ You can notice that in some case, `C Ref` is better than `NEON`. For small outpu
 The Keccak2x NEON version is *always faster* than 2 times Keccak C version. See https://github.com/cothan/NEON-SHA3_2x/blob/main/benchmark_rate.c#L63[bench() function]
 
 - If you only call Keccak *once*, use C version, it's faster
-- If you call Keccak *multiple times*, use *NEON* version, it's save sometimes.
+- If you call Keccak *multiple times*, use *NEON* version, it saves sometimes.
 
 
