@@ -22,7 +22,7 @@ limitations under the License.
 #include "fips202x2.h"
 #include "fips202.h"
 
-#define TESTS 1000
+#define TESTS 10000000
 #define OUTLENGTH 4096
 #define INLENGTH 1024
 
@@ -74,20 +74,28 @@ int bench(void func(), void funcx2(),
 
     long_long start, end;
     start = PAPI_get_real_cyc();
+
     for (int j = 0; j < TESTS; j++)
     {
+        PAPI_hl_region_begin("func2x");  
         funcx2(out1, out2, ol, in1, in2, il);
+        PAPI_hl_region_end("func2x");
     }
+    
     end = PAPI_get_real_cyc();
 
     neon = ((double)(end - start)) / TESTS;
 
     start = PAPI_get_real_cyc();
+    
     for (int j = 0; j < TESTS; j++)
     {
+    	PAPI_hl_region_begin("func");  
         func(out_gold1, ol, in_gold1, il);
         func(out_gold2, ol, in_gold2, il);
+        PAPI_hl_region_end("func");
     }
+    
     end = PAPI_get_real_cyc();
 
     fips = ((double)(end - start)) / TESTS;
@@ -113,9 +121,9 @@ int bench_shake128()
     void (*func)() = &shake128,
          (*funcx2)() = &shake128x2;
 
-    for (int ol = SHAKE128_RATE / 4; ol <= OUTLENGTH; ol += SHAKE128_RATE / 4)
+    for (int ol = 506; ol <= 506; ol += SHAKE128_RATE / 4)
     {
-        for (int il = SHAKE128_RATE / 4; il <= INLENGTH; il += SHAKE128_RATE / 4)
+        for (int il = 32; il <= 32; il += SHAKE128_RATE / 4)
         {
             ret = bench(func, funcx2, out_gold1, out_gold2, out1, out2, ol, in_gold1, in_gold2, in1, in2, il, &fa, &fb);
             printf("[%d, %d], [%lf, %lf]\n", ol, il, fa, fb);
@@ -144,9 +152,9 @@ int bench_shake256()
     void (*func)() = &shake256,
          (*funcx2)() = &shake256x2;
 
-    for (int ol = SHAKE256_RATE / 4; ol <= OUTLENGTH; ol += SHAKE256_RATE / 4)
+    for (int ol = 192; ol <= 192; ol += SHAKE256_RATE / 4)
     {
-        for (int il = SHAKE256_RATE / 4; il <= INLENGTH; il += SHAKE256_RATE / 4)
+        for (int il = 32; il <= 32; il += SHAKE256_RATE / 4)
         {
             ret = bench(func, funcx2, out_gold1, out_gold2, out1, out2, ol, in_gold1, in_gold2, in1, in2, il, &fa, &fb);
             printf("[%d, %d], [%lf, %lf]\n", ol, il, fa, fb);
@@ -166,8 +174,8 @@ int bench_shake256()
 int main()
 {
     int ret = 0;
-    printf("BENCHMARK SHAKE128:\n");
-    ret |= bench_shake128();
+    //printf("BENCHMARK SHAKE128:\n");
+    //ret |= bench_shake128();
     printf("BENCHMARK SHAKE256:\n");
     ret |= bench_shake256();
 
