@@ -22,7 +22,7 @@ limitations under the License.
 #include "fips202x2.h"
 #include "fips202.h"
 
-#define TESTS 10000000
+#define TESTS 1000000
 #define OUTLENGTH 4096
 #define INLENGTH 1024
 
@@ -75,12 +75,12 @@ int bench(void func(), void funcx2(),
     long_long start, end;
     start = PAPI_get_real_cyc();
 
+    PAPI_hl_region_begin("func2x");  
     for (int j = 0; j < TESTS; j++)
     {
-        PAPI_hl_region_begin("func2x");  
         funcx2(out1, out2, ol, in1, in2, il);
-        PAPI_hl_region_end("func2x");
     }
+    PAPI_hl_region_end("func2x");
     
     end = PAPI_get_real_cyc();
 
@@ -88,13 +88,13 @@ int bench(void func(), void funcx2(),
 
     start = PAPI_get_real_cyc();
     
+    PAPI_hl_region_begin("func");  
     for (int j = 0; j < TESTS; j++)
     {
-    	PAPI_hl_region_begin("func");  
         func(out_gold1, ol, in_gold1, il);
         func(out_gold2, ol, in_gold2, il);
-        PAPI_hl_region_end("func");
     }
+    PAPI_hl_region_end("func");
     
     end = PAPI_get_real_cyc();
 
@@ -174,10 +174,10 @@ int bench_shake256()
 int main()
 {
     int ret = 0;
-    //printf("BENCHMARK SHAKE128:\n");
-    //ret |= bench_shake128();
-    printf("BENCHMARK SHAKE256:\n");
-    ret |= bench_shake256();
+    printf("BENCHMARK SHAKE128:\n");
+    ret |= bench_shake128();
+    // printf("BENCHMARK SHAKE256:\n");
+    // ret |= bench_shake256();
 
     return ret;
 }
