@@ -18,14 +18,14 @@ limitations under the License.
 #include "fips202x2.h"
 
 #define NROUNDS 24
-#define _APPLE_M1_ 1
+#define SHA3 1
 
 // Define NEON operation
 
 // Bitwise-XOR: c = a ^ b
 #define vxor(c, a, b) c = veorq_u64(a, b);
 
-#if _APPLE_M1_ == 1
+#if SHA3 == 1
 
 /*
  * At least ARMv8.2-sha3 supported
