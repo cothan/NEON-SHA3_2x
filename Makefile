@@ -9,7 +9,8 @@ HEADERS = fips202x2.h fips202.h
 
 all: \
 	bench_rate_neon_fips202 \
-	bench_state_neon_fips202
+	benchmark_mem \
+	benchmark
 
 shared: \
 	libsha3x2_neon.so \
@@ -19,10 +20,14 @@ bench_rate_neon_fips202: fips202x2.c fips202.c benchmark_rate.c
 	$(CC) $(CFLAGS) $(SOURCES) benchmark_rate.c -o bench_rate_neon_fips202
 
 bench:
-	./bench_rate_neon_fips202
+	./benchmark
+	./benchmark_mem
+
+benchmark_mem: fips202x2.c fips202.c benchmark.cxx
+	c++ $(SOURCES) benchmark.cxx -DMEM=1 -o $@ -I/usr/local/include -L/usr/local/lib -lbenchmark -std=c++11  -O3
 
 benchmark: fips202x2.c fips202.c benchmark.cxx
-	c++ $(SOURCES) benchmark.cxx -o $@ -I/usr/local/include -L/usr/local/lib -lbenchmark -std=c++11  -O3
+	c++ $(SOURCES) benchmark.cxx -DMEM=0 -o $@ -I/usr/local/include -L/usr/local/lib -lbenchmark -std=c++11  -O3
 
 libsha3x2_neon.so: fips202x2.c fips202x2.h
 	$(CC) -shared -fPIC $(CFLAGS) fips202x2.c -o libsha3x2_neon.so
