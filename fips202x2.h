@@ -31,7 +31,6 @@ typedef struct {
   v128 s[25];
 } keccakx2_state;
 
-extern inline
 void KeccakF1600_StatePermutex2(v128 state[25]);
 
 void shake128x2_absorb(keccakx2_state *state,

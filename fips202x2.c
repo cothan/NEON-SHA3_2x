@@ -110,7 +110,6 @@ static const uint64_t neon_KeccakF_RoundConstants[NROUNDS] = {
  *
  * Arguments:   - v128 *state: pointer to input/output Keccak state
  **************************************************/
-extern inline
 void KeccakF1600_StatePermutex2(v128 state[25])
 {
   v128 Aba, Abe, Abi, Abo, Abu;
