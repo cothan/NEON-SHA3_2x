@@ -20,10 +20,29 @@ limitations under the License.
 #define NROUNDS 24
 #define SHA3 1
 
+/*
+ * Using vld1q_u64_x4 is consider harmful
+ */
+#ifndef MEM
+#define MEM 0
+#endif
+
 // Define NEON operation
 
 // Bitwise-XOR: c = a ^ b
 #define vxor(c, a, b) c = veorq_u64(a, b);
+
+#define pack(out, a, b, c, d) \
+  out.val[0] = a;             \
+  out.val[1] = b;             \
+  out.val[2] = c;             \
+  out.val[3] = d;
+
+#define unpack(a, b, c, d, out) \
+  a = out.val[0];               \
+  b = out.val[1];               \
+  c = out.val[2];               \
+  d = out.val[3];
 
 #if SHA3 == 1
 
@@ -112,6 +131,7 @@ static const uint64_t neon_KeccakF_RoundConstants[NROUNDS] = {
  **************************************************/
 void KeccakF1600_StatePermutex2(v128 state[25])
 {
+
   v128 Aba, Abe, Abi, Abo, Abu;
   v128 Aga, Age, Agi, Ago, Agu;
   v128 Aka, Ake, Aki, Ako, Aku;
@@ -125,7 +145,30 @@ void KeccakF1600_StatePermutex2(v128 state[25])
   v128 Ema, Eme, Emi, Emo, Emu;
   v128 Esa, Ese, Esi, Eso, Esu;
 
-  // copyFromState(A, state)
+#if MEM == 1
+  uint64x2x4_t holder;
+  uint64x2x2_t rc_holder;
+
+  holder = vld1q_u64_x4((uint64_t *)&state[0]);
+  unpack(Aba, Abe, Abi, Abo, holder);
+
+  holder = vld1q_u64_x4((uint64_t *)&state[4]);
+  unpack(Abu, Aga, Age, Agi, holder);
+
+  holder = vld1q_u64_x4((uint64_t *)&state[8]);
+  unpack(Ago, Agu, Aka, Ake, holder);
+
+  holder = vld1q_u64_x4((uint64_t *)&state[12]);
+  unpack(Aki, Ako, Aku, Ama, holder);
+
+  holder = vld1q_u64_x4((uint64_t *)&state[16]);
+  unpack(Ame, Ami, Amo, Amu, holder);
+
+  holder = vld1q_u64_x4((uint64_t *)&state[20]);
+  unpack(Asa, Ase, Asi, Aso, holder);
+
+  Asu = vld1q_u64((uint64_t *)&state[24]);
+#else
   Aba = state[0];
   Abe = state[1];
   Abi = state[2];
@@ -151,6 +194,7 @@ void KeccakF1600_StatePermutex2(v128 state[25])
   Asi = state[22];
   Aso = state[23];
   Asu = state[24];
+#endif
 
   for (int round = 0; round < NROUNDS; round += 2)
   {
@@ -174,7 +218,12 @@ void KeccakF1600_StatePermutex2(v128 state[25])
     vXORR(BCu, Asu, Du, 50);
 
     vXNA(Eba, Aba, BCe, BCi);
+#if MEM == 1
+    rc_holder = vld2q_dup_u64(&neon_KeccakF_RoundConstants[round]);
+    vxor(Eba, Eba, rc_holder.val[0]);
+#else
     vxor(Eba, Eba, vdupq_n_u64(neon_KeccakF_RoundConstants[round]));
+#endif
     vXNA(Ebe, BCe, BCi, BCo);
     vXNA(Ebi, BCi, BCo, BCu);
     vXNA(Ebo, BCo, BCu, Aba);
@@ -251,7 +300,11 @@ void KeccakF1600_StatePermutex2(v128 state[25])
     vXORR(BCu, Esu, Du, 50);
 
     vXNA(Aba, Eba, BCe, BCi);
+#if MEM == 1
+    vxor(Aba, Aba, rc_holder.val[1]);
+#else
     vxor(Aba, Aba, vdupq_n_u64(neon_KeccakF_RoundConstants[round + 1]));
+#endif
     vXNA(Abe, BCe, BCi, BCo);
     vXNA(Abi, BCi, BCo, BCu);
     vXNA(Abo, BCo, BCu, Eba);
@@ -306,6 +359,27 @@ void KeccakF1600_StatePermutex2(v128 state[25])
     vXNA(Asu, BCu, BCa, BCe);
   }
 
+#if MEM == 1
+  pack(holder, Aba, Abe, Abi, Abo);
+  vst1q_u64_x4((uint64_t *)&state[0], holder);
+
+  pack(holder, Abu, Aga, Age, Agi);
+  vst1q_u64_x4((uint64_t *)&state[4], holder);
+
+  pack(holder, Ago, Agu, Aka, Ake);
+  vst1q_u64_x4((uint64_t *)&state[8], holder);
+
+  pack(holder, Aki, Ako, Aku, Ama);
+  vst1q_u64_x4((uint64_t *)&state[12], holder);
+
+  pack(holder, Ame, Ami, Amo, Amu);
+  vst1q_u64_x4((uint64_t *)&state[16], holder);
+
+  pack(holder, Asa, Ase, Asi, Aso);
+  vst1q_u64_x4((uint64_t *)&state[20], holder);
+
+  vst1q_u64((uint64_t *)&state[24], Asu);
+#else
   state[0] = Aba;
   state[1] = Abe;
   state[2] = Abi;
@@ -331,6 +405,7 @@ void KeccakF1600_StatePermutex2(v128 state[25])
   state[22] = Asi;
   state[23] = Aso;
   state[24] = Asu;
+#endif
 }
 
 /*************************************************
