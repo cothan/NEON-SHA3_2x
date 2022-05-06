@@ -13,6 +13,7 @@ typedef struct {
   uint64_t s[25];
 } keccak_state;
 
+void KeccakF1600_StatePermute(uint64_t state[25]);
 
 void shake128_absorb(keccak_state *state, const uint8_t *in, size_t inlen);
 

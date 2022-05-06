@@ -18,16 +18,39 @@ limitations under the License.
 #include "fips202x2.h"
 
 #define NROUNDS 24
+#define SHA3 1
 
 // Define NEON operation
 
 // Bitwise-XOR: c = a ^ b
 #define vxor(c, a, b) c = veorq_u64(a, b);
 
+#if SHA3 == 1
+
+/*
+ * At least ARMv8.2-sha3 supported
+ */
+
+// Xor chain: out = a ^ b ^ c ^ d ^ e
+#define vXOR5(out, a, b, c, d, e) \
+  out = veor3q_u64(a, b, c);      \
+  out = veor3q_u64(out, d, e);
+
+// Rotate left by 1 bit, then XOR: a ^ ROL(b)
+#define vRXOR(c, a, b) c = vrax1q_u64(a, b);
+
+// XOR then Rotate by n bit: c = ROL(a^b, n)
+#define vXORR(c, a, b, n) c = vxarq_u64(a, b, n);
+
+// Xor Not And: out = a ^ ( (~b) & c)
+#define vXNA(out, a, b, c) out = vbcaxq_u64(a, c, b);
+
+#else
+
 // Rotate left by n bit
-#define vROL(out, a, offset)    \
-  out = vshlq_n_u64(a, offset); \
-  out = vsriq_n_u64(out, a, 64 - offset);
+#define vROL(out, a, offset)      \
+  out = vshlq_n_u64(a, (offset)); \
+  out = vsriq_n_u64(out, a, 64 - (offset));
 
 // Xor chain: out = a ^ b ^ c ^ d ^ e
 #define vXOR5(out, a, b, c, d, e) \
@@ -41,8 +64,15 @@ limitations under the License.
   out = vbicq_u64(c, b);   \
   out = veorq_u64(out, a);
 
-// Rotate by 1 bit, then XOR: a ^ ROL(b): SHA1 instruction, not support
-#define vrxor(c, a, b) c = vrax1q_u64(a, b);
+#define vRXOR(c, a, b) \
+  vROL(c, b, 1);       \
+  vxor(c, c, a);
+
+#define vXORR(c, a, b, n) \
+  a = veorq_u64(a, b);    \
+  vROL(c, a, 64 - n);
+
+#endif
 
 // End
 
@@ -74,13 +104,13 @@ static const uint64_t neon_KeccakF_RoundConstants[NROUNDS] = {
     (uint64_t)0x8000000080008008ULL};
 
 /*************************************************
-* Name:        KeccakF1600_StatePermutex2
-*
-* Description: The Keccak F1600 Permutation
-*
-* Arguments:   - v128 *state: pointer to input/output Keccak state
-**************************************************/
-static inline void KeccakF1600_StatePermutex2(v128 state[25])
+ * Name:        KeccakF1600_StatePermutex2
+ *
+ * Description: The Keccak F1600 Permutation
+ *
+ * Arguments:   - v128 *state: pointer to input/output Keccak state
+ **************************************************/
+void KeccakF1600_StatePermutex2(v128 state[25])
 {
   v128 Aba, Abe, Abi, Abo, Abu;
   v128 Aga, Age, Agi, Ago, Agu;
@@ -95,7 +125,7 @@ static inline void KeccakF1600_StatePermutex2(v128 state[25])
   v128 Ema, Eme, Emi, Emo, Emu;
   v128 Esa, Ese, Esi, Eso, Esu;
 
-  //copyFromState(A, state)
+  // copyFromState(A, state)
   Aba = state[0];
   Abe = state[1];
   Abi = state[2];
@@ -131,27 +161,18 @@ static inline void KeccakF1600_StatePermutex2(v128 state[25])
     vXOR5(BCo, Abo, Ago, Ako, Amo, Aso);
     vXOR5(BCu, Abu, Agu, Aku, Amu, Asu);
 
-    //thetaRhoPiChiIotaPrepareTheta(round  , A, E)
-    vROL(Da, BCe, 1);
-    vxor(Da, BCu, Da);
-    vROL(De, BCi, 1);
-    vxor(De, BCa, De);
-    vROL(Di, BCo, 1);
-    vxor(Di, BCe, Di);
-    vROL(Do, BCu, 1);
-    vxor(Do, BCi, Do);
-    vROL(Du, BCa, 1);
-    vxor(Du, BCo, Du);
+    vRXOR(Da, BCu, BCe);
+    vRXOR(De, BCa, BCi);
+    vRXOR(Di, BCe, BCo);
+    vRXOR(Do, BCi, BCu);
+    vRXOR(Du, BCo, BCa);
 
     vxor(Aba, Aba, Da);
-    vxor(Age, Age, De);
-    vROL(BCe, Age, 44);
-    vxor(Aki, Aki, Di);
-    vROL(BCi, Aki, 43);
-    vxor(Amo, Amo, Do);
-    vROL(BCo, Amo, 21);
-    vxor(Asu, Asu, Du);
-    vROL(BCu, Asu, 14);
+    vXORR(BCe, Age, De, 20);
+    vXORR(BCi, Aki, Di, 21);
+    vXORR(BCo, Amo, Do, 43);
+    vXORR(BCu, Asu, Du, 50);
+
     vXNA(Eba, Aba, BCe, BCi);
     vxor(Eba, Eba, vdupq_n_u64(neon_KeccakF_RoundConstants[round]));
     vXNA(Ebe, BCe, BCi, BCo);
@@ -159,64 +180,48 @@ static inline void KeccakF1600_StatePermutex2(v128 state[25])
     vXNA(Ebo, BCo, BCu, Aba);
     vXNA(Ebu, BCu, Aba, BCe);
 
-    vxor(Abo, Abo, Do);
-    vROL(BCa, Abo, 28);
-    vxor(Agu, Agu, Du);
-    vROL(BCe, Agu, 20);
-    vxor(Aka, Aka, Da);
-    vROL(BCi, Aka, 3);
-    vxor(Ame, Ame, De);
-    vROL(BCo, Ame, 45);
-    vxor(Asi, Asi, Di);
-    vROL(BCu, Asi, 61);
+    vXORR(BCa, Abo, Do, 36);
+    vXORR(BCe, Agu, Du, 44);
+    vXORR(BCi, Aka, Da, 61);
+    vXORR(BCo, Ame, De, 19);
+    vXORR(BCu, Asi, Di, 3);
+
     vXNA(Ega, BCa, BCe, BCi);
     vXNA(Ege, BCe, BCi, BCo);
     vXNA(Egi, BCi, BCo, BCu);
     vXNA(Ego, BCo, BCu, BCa);
     vXNA(Egu, BCu, BCa, BCe);
 
-    vxor(Abe, Abe, De);
-    vROL(BCa, Abe, 1);
-    vxor(Agi, Agi, Di);
-    vROL(BCe, Agi, 6);
-    vxor(Ako, Ako, Do);
-    vROL(BCi, Ako, 25);
-    vxor(Amu, Amu, Du);
-    vROL(BCo, Amu, 8);
-    vxor(Asa, Asa, Da);
-    vROL(BCu, Asa, 18);
+    vXORR(BCa, Abe, De, 63);
+    vXORR(BCe, Agi, Di, 58);
+    vXORR(BCi, Ako, Do, 39);
+    vXORR(BCo, Amu, Du, 56);
+    vXORR(BCu, Asa, Da, 46);
+
     vXNA(Eka, BCa, BCe, BCi);
     vXNA(Eke, BCe, BCi, BCo);
     vXNA(Eki, BCi, BCo, BCu);
     vXNA(Eko, BCo, BCu, BCa);
     vXNA(Eku, BCu, BCa, BCe);
 
-    vxor(Abu, Abu, Du);
-    vROL(BCa, Abu, 27);
-    vxor(Aga, Aga, Da);
-    vROL(BCe, Aga, 36);
-    vxor(Ake, Ake, De);
-    vROL(BCi, Ake, 10);
-    vxor(Ami, Ami, Di);
-    vROL(BCo, Ami, 15);
-    vxor(Aso, Aso, Do);
-    vROL(BCu, Aso, 56);
+    vXORR(BCa, Abu, Du, 37);
+    vXORR(BCe, Aga, Da, 28);
+    vXORR(BCi, Ake, De, 54);
+    vXORR(BCo, Ami, Di, 49);
+    vXORR(BCu, Aso, Do, 8);
+
     vXNA(Ema, BCa, BCe, BCi);
     vXNA(Eme, BCe, BCi, BCo);
     vXNA(Emi, BCi, BCo, BCu);
     vXNA(Emo, BCo, BCu, BCa);
     vXNA(Emu, BCu, BCa, BCe);
 
-    vxor(Abi, Abi, Di);
-    vROL(BCa, Abi, 62);
-    vxor(Ago, Ago, Do);
-    vROL(BCe, Ago, 55);
-    vxor(Aku, Aku, Du);
-    vROL(BCi, Aku, 39);
-    vxor(Ama, Ama, Da);
-    vROL(BCo, Ama, 41);
-    vxor(Ase, Ase, De);
-    vROL(BCu, Ase, 2);
+    vXORR(BCa, Abi, Di, 2);
+    vXORR(BCe, Ago, Do, 9);
+    vXORR(BCi, Aku, Du, 25);
+    vXORR(BCo, Ama, Da, 23);
+    vXORR(BCu, Ase, De, 62);
+
     vXNA(Esa, BCa, BCe, BCi);
     vXNA(Ese, BCe, BCi, BCo);
     vXNA(Esi, BCi, BCo, BCu);
@@ -232,27 +237,19 @@ static inline void KeccakF1600_StatePermutex2(v128 state[25])
     vXOR5(BCo, Ebo, Ego, Eko, Emo, Eso);
     vXOR5(BCu, Ebu, Egu, Eku, Emu, Esu);
 
-    //thetaRhoPiChiIotaPrepareTheta(round+1, E, A)
-    vROL(Da, BCe, 1);
-    vxor(Da, BCu, Da);
-    vROL(De, BCi, 1);
-    vxor(De, BCa, De);
-    vROL(Di, BCo, 1);
-    vxor(Di, BCe, Di);
-    vROL(Do, BCu, 1);
-    vxor(Do, BCi, Do);
-    vROL(Du, BCa, 1);
-    vxor(Du, BCo, Du);
+    // thetaRhoPiChiIotaPrepareTheta(round+1, E, A)
+    vRXOR(Da, BCu, BCe);
+    vRXOR(De, BCa, BCi);
+    vRXOR(Di, BCe, BCo);
+    vRXOR(Do, BCi, BCu);
+    vRXOR(Du, BCo, BCa);
 
     vxor(Eba, Eba, Da);
-    vxor(Ege, Ege, De);
-    vROL(BCe, Ege, 44);
-    vxor(Eki, Eki, Di);
-    vROL(BCi, Eki, 43);
-    vxor(Emo, Emo, Do);
-    vROL(BCo, Emo, 21);
-    vxor(Esu, Esu, Du);
-    vROL(BCu, Esu, 14);
+    vXORR(BCe, Ege, De, 20);
+    vXORR(BCi, Eki, Di, 21);
+    vXORR(BCo, Emo, Do, 43);
+    vXORR(BCu, Esu, Du, 50);
+
     vXNA(Aba, Eba, BCe, BCi);
     vxor(Aba, Aba, vdupq_n_u64(neon_KeccakF_RoundConstants[round + 1]));
     vXNA(Abe, BCe, BCi, BCo);
@@ -260,64 +257,48 @@ static inline void KeccakF1600_StatePermutex2(v128 state[25])
     vXNA(Abo, BCo, BCu, Eba);
     vXNA(Abu, BCu, Eba, BCe);
 
-    vxor(Ebo, Ebo, Do);
-    vROL(BCa, Ebo, 28);
-    vxor(Egu, Egu, Du);
-    vROL(BCe, Egu, 20);
-    vxor(Eka, Eka, Da);
-    vROL(BCi, Eka, 3);
-    vxor(Eme, Eme, De);
-    vROL(BCo, Eme, 45);
-    vxor(Esi, Esi, Di);
-    vROL(BCu, Esi, 61);
+    vXORR(BCa, Ebo, Do, 36);
+    vXORR(BCe, Egu, Du, 44);
+    vXORR(BCi, Eka, Da, 61);
+    vXORR(BCo, Eme, De, 19);
+    vXORR(BCu, Esi, Di, 3);
+
     vXNA(Aga, BCa, BCe, BCi);
     vXNA(Age, BCe, BCi, BCo);
     vXNA(Agi, BCi, BCo, BCu);
     vXNA(Ago, BCo, BCu, BCa);
     vXNA(Agu, BCu, BCa, BCe);
 
-    vxor(Ebe, Ebe, De);
-    vROL(BCa, Ebe, 1);
-    vxor(Egi, Egi, Di);
-    vROL(BCe, Egi, 6);
-    vxor(Eko, Eko, Do);
-    vROL(BCi, Eko, 25);
-    vxor(Emu, Emu, Du);
-    vROL(BCo, Emu, 8);
-    vxor(Esa, Esa, Da);
-    vROL(BCu, Esa, 18);
+    vXORR(BCa, Ebe, De, 63);
+    vXORR(BCe, Egi, Di, 58);
+    vXORR(BCi, Eko, Do, 39);
+    vXORR(BCo, Emu, Du, 56);
+    vXORR(BCu, Esa, Da, 46);
+
     vXNA(Aka, BCa, BCe, BCi);
     vXNA(Ake, BCe, BCi, BCo);
     vXNA(Aki, BCi, BCo, BCu);
     vXNA(Ako, BCo, BCu, BCa);
     vXNA(Aku, BCu, BCa, BCe);
 
-    vxor(Ebu, Ebu, Du);
-    vROL(BCa, Ebu, 27);
-    vxor(Ega, Ega, Da);
-    vROL(BCe, Ega, 36);
-    vxor(Eke, Eke, De);
-    vROL(BCi, Eke, 10);
-    vxor(Emi, Emi, Di);
-    vROL(BCo, Emi, 15);
-    vxor(Eso, Eso, Do);
-    vROL(BCu, Eso, 56);
+    vXORR(BCa, Ebu, Du, 37);
+    vXORR(BCe, Ega, Da, 28);
+    vXORR(BCi, Eke, De, 54);
+    vXORR(BCo, Emi, Di, 49);
+    vXORR(BCu, Eso, Do, 8);
+
     vXNA(Ama, BCa, BCe, BCi);
     vXNA(Ame, BCe, BCi, BCo);
     vXNA(Ami, BCi, BCo, BCu);
     vXNA(Amo, BCo, BCu, BCa);
     vXNA(Amu, BCu, BCa, BCe);
 
-    vxor(Ebi, Ebi, Di);
-    vROL(BCa, Ebi, 62);
-    vxor(Ego, Ego, Do);
-    vROL(BCe, Ego, 55);
-    vxor(Eku, Eku, Du);
-    vROL(BCi, Eku, 39);
-    vxor(Ema, Ema, Da);
-    vROL(BCo, Ema, 41);
-    vxor(Ese, Ese, De);
-    vROL(BCu, Ese, 2);
+    vXORR(BCa, Ebi, Di, 2);
+    vXORR(BCe, Ego, Do, 9);
+    vXORR(BCi, Eku, Du, 25);
+    vXORR(BCo, Ema, Da, 23);
+    vXORR(BCu, Ese, De, 62);
+
     vXNA(Asa, BCa, BCe, BCi);
     vXNA(Ase, BCe, BCi, BCo);
     vXNA(Asi, BCi, BCo, BCu);
@@ -353,18 +334,18 @@ static inline void KeccakF1600_StatePermutex2(v128 state[25])
 }
 
 /*************************************************
-* Name:        keccakx2_absorb
-*
-* Description: Absorb step of Keccak;
-*              non-incremental, starts by zeroeing the state.
-*
-* Arguments:   - v128 *s: pointer to (uninitialized) output Keccak state
-*              - unsigned int r: rate in bytes (e.g., 168 for SHAKE128)
-*              - const uint8_t *in0, *in1: pointer to input to be absorbed into s
-*              - size_t mlen: length of input in bytes
-*              - uint8_t p: domain-separation byte for different
-*                           Keccak-derived functions
-**************************************************/
+ * Name:        keccakx2_absorb
+ *
+ * Description: Absorb step of Keccak;
+ *              non-incremental, starts by zeroeing the state.
+ *
+ * Arguments:   - v128 *s: pointer to (uninitialized) output Keccak state
+ *              - unsigned int r: rate in bytes (e.g., 168 for SHAKE128)
+ *              - const uint8_t *in0, *in1: pointer to input to be absorbed into s
+ *              - size_t mlen: length of input in bytes
+ *              - uint8_t p: domain-separation byte for different
+ *                           Keccak-derived functions
+ **************************************************/
 void keccakx2_absorb(v128 s[25],
                      unsigned int r,
                      const uint8_t *in0,
@@ -465,17 +446,17 @@ void keccakx2_absorb(v128 s[25],
 }
 
 /*************************************************
-* Name:        keccakx2_squeezeblocks
-*
-* Description: Squeeze step of Keccak. Squeezes full blocks of r bytes each.
-*              Modifies the state. Can be called multiple times to keep
-*              squeezing, i.e., is incremental.
-*
-* Arguments:   - uint8_t *out, *out1: pointer to output blocks
-*              - size_t nblocks: number of blocks to be squeezed (written to h)
-*              - unsigned int r: rate in bytes (e.g., 168 for SHAKE128)
-*              - v128 *s: pointer to input/output Keccak state
-**************************************************/
+ * Name:        keccakx2_squeezeblocks
+ *
+ * Description: Squeeze step of Keccak. Squeezes full blocks of r bytes each.
+ *              Modifies the state. Can be called multiple times to keep
+ *              squeezing, i.e., is incremental.
+ *
+ * Arguments:   - uint8_t *out, *out1: pointer to output blocks
+ *              - size_t nblocks: number of blocks to be squeezed (written to h)
+ *              - unsigned int r: rate in bytes (e.g., 168 for SHAKE128)
+ *              - v128 *s: pointer to input/output Keccak state
+ **************************************************/
 void keccakx2_squeezeblocks(uint8_t *out0,
                             uint8_t *out1,
                             size_t nblocks,
@@ -519,16 +500,16 @@ void keccakx2_squeezeblocks(uint8_t *out0,
 }
 
 /*************************************************
-* Name:        shake128x2_absorb
-*
-* Description: Absorb step of the SHAKE128 XOF.
-*              non-incremental, starts by zeroeing the state.
-*
-* Arguments:   - keccakx2_state *state: pointer to (uninitialized) output
-*                                     Keccak state
-*              - const uint8_t *in0, *in1: pointer to input to be absorbed into s
-*              - size_t inlen: length of input in bytes
-**************************************************/
+ * Name:        shake128x2_absorb
+ *
+ * Description: Absorb step of the SHAKE128 XOF.
+ *              non-incremental, starts by zeroeing the state.
+ *
+ * Arguments:   - keccakx2_state *state: pointer to (uninitialized) output
+ *                                     Keccak state
+ *              - const uint8_t *in0, *in1: pointer to input to be absorbed into s
+ *              - size_t inlen: length of input in bytes
+ **************************************************/
 void shake128x2_absorb(keccakx2_state *state,
                        const uint8_t *in0,
                        const uint8_t *in1,
@@ -538,17 +519,17 @@ void shake128x2_absorb(keccakx2_state *state,
 }
 
 /*************************************************
-* Name:        shake128x2_squeezeblocks
-*
-* Description: Squeeze step of SHAKE128 XOF. Squeezes full blocks of
-*              SHAKE128_RATE bytes each. Modifies the state. Can be called
-*              multiple times to keep squeezing, i.e., is incremental.
-*
-* Arguments:   - uint8_t *out0, *out1: pointer to output blocks
-*              - size_t nblocks:  number of blocks to be squeezed
-*                                 (written to output)
-*              - keccakx2_state *s: pointer to input/output Keccak state
-**************************************************/
+ * Name:        shake128x2_squeezeblocks
+ *
+ * Description: Squeeze step of SHAKE128 XOF. Squeezes full blocks of
+ *              SHAKE128_RATE bytes each. Modifies the state. Can be called
+ *              multiple times to keep squeezing, i.e., is incremental.
+ *
+ * Arguments:   - uint8_t *out0, *out1: pointer to output blocks
+ *              - size_t nblocks:  number of blocks to be squeezed
+ *                                 (written to output)
+ *              - keccakx2_state *s: pointer to input/output Keccak state
+ **************************************************/
 void shake128x2_squeezeblocks(uint8_t *out0,
                               uint8_t *out1,
                               size_t nblocks,
@@ -558,15 +539,15 @@ void shake128x2_squeezeblocks(uint8_t *out0,
 }
 
 /*************************************************
-* Name:        shake256x2_absorb
-*
-* Description: Absorb step of the SHAKE256 XOF.
-*              non-incremental, starts by zeroeing the state.
-*
-* Arguments:   - keccakx2_state *s: pointer to (uninitialized) output Keccak state
-*              - const uint8_t *in0, *in1: pointer to input to be absorbed into s
-*              - size_t inlen: length of input in bytes
-**************************************************/
+ * Name:        shake256x2_absorb
+ *
+ * Description: Absorb step of the SHAKE256 XOF.
+ *              non-incremental, starts by zeroeing the state.
+ *
+ * Arguments:   - keccakx2_state *s: pointer to (uninitialized) output Keccak state
+ *              - const uint8_t *in0, *in1: pointer to input to be absorbed into s
+ *              - size_t inlen: length of input in bytes
+ **************************************************/
 void shake256x2_absorb(keccakx2_state *state,
                        const uint8_t *in0,
                        const uint8_t *in1,
@@ -576,17 +557,17 @@ void shake256x2_absorb(keccakx2_state *state,
 }
 
 /*************************************************
-* Name:        shake256x2_squeezeblocks
-*
-* Description: Squeeze step of SHAKE256 XOF. Squeezes full blocks of
-*              SHAKE256_RATE bytes each. Modifies the state. Can be called
-*              multiple times to keep squeezing, i.e., is incremental.
-*
-* Arguments:   - uint8_t *out0, *out1: pointer to output blocks
-*              - size_t nblocks: number of blocks to be squeezed
-*                                 (written to output)
-*              - keccakx2_state *s: pointer to input/output Keccak state
-**************************************************/
+ * Name:        shake256x2_squeezeblocks
+ *
+ * Description: Squeeze step of SHAKE256 XOF. Squeezes full blocks of
+ *              SHAKE256_RATE bytes each. Modifies the state. Can be called
+ *              multiple times to keep squeezing, i.e., is incremental.
+ *
+ * Arguments:   - uint8_t *out0, *out1: pointer to output blocks
+ *              - size_t nblocks: number of blocks to be squeezed
+ *                                 (written to output)
+ *              - keccakx2_state *s: pointer to input/output Keccak state
+ **************************************************/
 void shake256x2_squeezeblocks(uint8_t *out0,
                               uint8_t *out1,
                               size_t nblocks,
@@ -596,15 +577,15 @@ void shake256x2_squeezeblocks(uint8_t *out0,
 }
 
 /*************************************************
-* Name:        shake128x2
-*
-* Description: SHAKE128 XOF with non-incremental API
-*
-* Arguments:   - uint8_t *out0, *out1: pointer to output
-*              - size_t outlen: requested output length in bytes
-*              - const uint8_t *in0, *in1: pointer to input
-*              - size_t inlen: length of input in bytes
-**************************************************/
+ * Name:        shake128x2
+ *
+ * Description: SHAKE128 XOF with non-incremental API
+ *
+ * Arguments:   - uint8_t *out0, *out1: pointer to output
+ *              - size_t outlen: requested output length in bytes
+ *              - const uint8_t *in0, *in1: pointer to input
+ *              - size_t inlen: length of input in bytes
+ **************************************************/
 void shake128x2(uint8_t *out0,
                 uint8_t *out1,
                 size_t outlen,
@@ -636,15 +617,15 @@ void shake128x2(uint8_t *out0,
 }
 
 /*************************************************
-* Name:        shake256x2
-*
-* Description: SHAKE256 XOF with non-incremental API
-*
-* Arguments:   - uint8_t *out0, *out1: pointer to output
-*              - size_t outlen: requested output length in bytes
-*              - const uint8_t *in0, *in1: pointer to input
-*              - size_t inlen: length of input in bytes
-**************************************************/
+ * Name:        shake256x2
+ *
+ * Description: SHAKE256 XOF with non-incremental API
+ *
+ * Arguments:   - uint8_t *out0, *out1: pointer to output
+ *              - size_t outlen: requested output length in bytes
+ *              - const uint8_t *in0, *in1: pointer to input
+ *              - size_t inlen: length of input in bytes
+ **************************************************/
 void shake256x2(uint8_t *out0,
                 uint8_t *out1,
                 size_t outlen,
@@ -676,14 +657,14 @@ void shake256x2(uint8_t *out0,
 }
 
 /*************************************************
-* Name:        sha3_256x2
-*
-* Description: SHA3-256 with non-incremental API
-*
-* Arguments:   - uint8_t *h1, *h2: pointer to output (32 bytes)
-*              - const uint8_t *in0, *in1: pointer to input
-*              - size_t inlen: length of input in bytes
-**************************************************/
+ * Name:        sha3_256x2
+ *
+ * Description: SHA3-256 with non-incremental API
+ *
+ * Arguments:   - uint8_t *h1, *h2: pointer to output (32 bytes)
+ *              - const uint8_t *in0, *in1: pointer to input
+ *              - size_t inlen: length of input in bytes
+ **************************************************/
 void sha3_256x2(uint8_t h1[32],
                 uint8_t h2[32],
                 const uint8_t *in1,
@@ -705,14 +686,14 @@ void sha3_256x2(uint8_t h1[32],
 }
 
 /*************************************************
-* Name:        sha3_512x2
-*
-* Description: SHA3-512 with non-incremental API
-*
-* Arguments:   - uint8_t *h0, *h1: pointer to output (64 bytes)
-*              - const uint8_t *in0, *in1: pointer to input
-*              - size_t inlen: length of input in bytes
-**************************************************/
+ * Name:        sha3_512x2
+ *
+ * Description: SHA3-512 with non-incremental API
+ *
+ * Arguments:   - uint8_t *h0, *h1: pointer to output (64 bytes)
+ *              - const uint8_t *in0, *in1: pointer to input
+ *              - size_t inlen: length of input in bytes
+ **************************************************/
 void sha3_512x2(uint8_t h1[64],
                 uint8_t h2[64],
                 const uint8_t *in1,

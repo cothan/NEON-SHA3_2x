@@ -1,6 +1,52 @@
 = NEON ARMv8 SHA3_2x
 :kroki-fetch-diagram:
 
+== Update 
+
+This package is now support ARMv8.2-sha3 instruction
+The result improve significantly when use SHA-3 instruction.
+
+== Apple M1
+
+[source]
+.SHA-3 Enabled
+----
+2022-05-06T06:04:41-04:00
+Running ./benchmark
+Run on (8 X 24.1207 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x8)
+Load Average: 2.07, 1.91, 1.75
+-----------------------------------------------------
+Benchmark           Time             CPU   Iterations
+-----------------------------------------------------
+BM_F1600x2        156 ns          156 ns      4135039
+BM_F1600          218 ns          218 ns      3166704
+----
+
+[source]
+.SHA-3 Disable
+----
+2022-05-06T06:09:10-04:00
+Running ./benchmark
+Run on (8 X 24.0697 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x8)
+Load Average: 2.40, 2.16, 1.90
+-----------------------------------------------------
+Benchmark           Time             CPU   Iterations
+-----------------------------------------------------
+BM_F1600x2        355 ns          355 ns      1948260
+BM_F1600          217 ns          217 ns      3220716
+
+----
+
+Anyway it's still faster than 2 times Keccak-F1600.
+
 == NEON ARMv8 Keccak2x Implementation. 
 
 https://github.com/XKCP/XKCP/tree/master/lib/low/KeccakP-1600-times2/SIMD128[Since there is no SIMD128 for ARMv8], so I decide to implement one. 

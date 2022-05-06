@@ -87,8 +87,6 @@ static const uint64_t KeccakF_RoundConstants[NROUNDS] = {
 //     // printf("%d : %lx -- %lx -- %lx -- %lx -- %lx\n", count++, a, b, c, d, e);
 //     // printf("%d : %lu -- %lu -- %lu -- %lu -- %lu\n", count++, a, b, c, d, e);
 // }
-
-
 void KeccakF1600_StatePermute(uint64_t state[25])
 {
         int round;
