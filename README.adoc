@@ -113,3 +113,21 @@ The Keccak2x NEON version is *always faster* than 2 times Keccak C version. See 
 - If you call Keccak *multiple times*, use *NEON* version, it saves sometimes.
 
 
+== Apple M1
+
+[source]
+----
+2022-05-06T06:04:41-04:00
+Running ./benchmark
+Run on (8 X 24.1207 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x8)
+Load Average: 2.07, 1.91, 1.75
+-----------------------------------------------------
+Benchmark           Time             CPU   Iterations
+-----------------------------------------------------
+BM_F1600x2        156 ns          156 ns      4135039
+BM_F1600          218 ns          218 ns      3166704
+----
