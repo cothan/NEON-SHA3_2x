@@ -16,15 +16,19 @@ limitations under the License.
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <papi.h>
-#include <sys/random.h>
 #include <string.h>
+#include <time.h>
 #include "fips202x2.h"
 #include "fips202.h"
 
 #define TESTS 1000
 #define OUTLENGTH 4096
 #define INLENGTH 1024
+
+#define VERBOSE 0
+
+#define TIME(s) clock_gettime(CLOCK_MONOTONIC_RAW, &s);
+#define CALC(start, stop, ntests) ((double)((stop.tv_sec - start.tv_sec) * 1000000000 + (stop.tv_nsec - start.tv_nsec))) / ntests
 
 /*
 Compile flags:
@@ -65,35 +69,39 @@ int bench(void func(), void funcx2(),
           uint8_t *in1, uint8_t *in2, int il,
           double *fa, double *fb)
 {
-    double neon, fips;
+    double neon = 0, fips = 0;
+    double neon_ns = 0, fips_ns = 0;
 
-    getrandom(in1, il, GRND_NONBLOCK);
-    getrandom(in2, il, GRND_NONBLOCK);
+    for (int i = 0; i < il; i++)
+    {
+        in1[i] = rand() & 0xff;
+        in2[i] = rand() & 0xff;
+    }
     memcpy(in_gold1, in1, il);
     memcpy(in_gold2, in2, il);
 
-    long_long start, end;
-    start = PAPI_get_real_cyc();
+    struct timespec start, end;
+    TIME(start);
     for (int j = 0; j < TESTS; j++)
     {
         funcx2(out1, out2, ol, in1, in2, il);
     }
-    end = PAPI_get_real_cyc();
+    TIME(end);
+    neon_ns = CALC(start, end, TESTS);
+    if (VERBOSE) printf("NEON: %f ns/operation\n", neon_ns);
 
-    neon = ((double)(end - start)) / TESTS;
-
-    start = PAPI_get_real_cyc();
+    TIME(start);
     for (int j = 0; j < TESTS; j++)
     {
         func(out_gold1, ol, in_gold1, il);
         func(out_gold2, ol, in_gold2, il);
     }
-    end = PAPI_get_real_cyc();
+    TIME(end);
+    fips_ns = CALC(start, end, TESTS);
+    if (VERBOSE) printf("FIPS: %f ns/operation. Ratio %.2f\n", fips_ns, fips_ns/neon_ns);
 
-    fips = ((double)(end - start)) / TESTS;
-
-    *fa = neon;
-    *fb = fips;
+    *fa = neon_ns;
+    *fb = fips_ns;
 
     if (memcmp(out_gold1, out1, ol) || memcmp(out_gold2, out2, ol))
         return 1;
@@ -118,7 +126,7 @@ int bench_shake128()
         for (int il = SHAKE128_RATE / 4; il <= INLENGTH; il += SHAKE128_RATE / 4)
         {
             ret = bench(func, funcx2, out_gold1, out_gold2, out1, out2, ol, in_gold1, in_gold2, in1, in2, il, &fa, &fb);
-            printf("[%d, %d], [%lf, %lf]\n", ol, il, fa, fb);
+            if (!VERBOSE) printf("[%d, %d], [%lf, %lf]\n", ol, il, fa, fb);
             if (ret)
             {
                 printf("%d %d: ERROR\n", ol, il);
@@ -149,7 +157,7 @@ int bench_shake256()
         for (int il = SHAKE256_RATE / 4; il <= INLENGTH; il += SHAKE256_RATE / 4)
         {
             ret = bench(func, funcx2, out_gold1, out_gold2, out1, out2, ol, in_gold1, in_gold2, in1, in2, il, &fa, &fb);
-            printf("[%d, %d], [%lf, %lf]\n", ol, il, fa, fb);
+            if (!VERBOSE) printf("[%d, %d], [%lf, %lf]\n", ol, il, fa, fb);
             if (ret)
             {
                 printf("%d %d: ERROR\n", ol, il);
@@ -165,6 +173,7 @@ int bench_shake256()
 
 int main()
 {
+    srand(time(0));
     int ret = 0;
     printf("BENCHMARK SHAKE128:\n");
     ret |= bench_shake128();
@@ -173,3 +182,5 @@ int main()
 
     return ret;
 }
+
+

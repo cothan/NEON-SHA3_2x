@@ -1,5 +1,5 @@
 CC ?= /usr/bin/gcc
-CFLAGS += -O3 -mtune=native -march=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize -lpapi
+CFLAGS += -O3 -mtune=native -fomit-frame-pointer -fwrapv -Wall -Wextra -Wpedantic -fno-tree-vectorize
 RM = /bin/rm
 
 SOURCES = fips202x2.c fips202.c
@@ -18,8 +18,11 @@ shared: \
 bench_rate_neon_fips202: fips202x2.c fips202.c benchmark_rate.c
 	$(CC) $(CFLAGS) $(SOURCES) benchmark_rate.c -o bench_rate_neon_fips202
 
-bench_state_neon_fips202: fips202x2.c fips202.c benchmark_state.c
-	$(CC) $(CFLAGS) $(SOURCES) benchmark_state.c -o bench_state_neon_fips202
+bench:
+	./bench_rate_neon_fips202
+
+benchmark: fips202x2.c fips202.c benchmark.cxx
+	c++ $(SOURCES) benchmark.cxx -o $@ -I/usr/local/include -L/usr/local/lib -lbenchmark -std=c++11  -O3
 
 libsha3x2_neon.so: fips202x2.c fips202x2.h
 	$(CC) -shared -fPIC $(CFLAGS) fips202x2.c -o libsha3x2_neon.so
@@ -30,7 +33,7 @@ libsha3.so: fips202.c fips202.h
 clean:
 	-$(RM) -rf *.gcno *.gcda *.lcov *.o *.so
 	-$(RM) -rf bench_rate_neon_fips202
-	-$(RM) -rf bench_state_neon_fips202
+	-$(RM) -rf benchmark
 	-$(RM) -rf libsha3x2_neon.so
 	-$(RM) -rf libsha3.so
 
