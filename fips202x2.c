@@ -147,7 +147,6 @@ void KeccakF1600_StatePermutex2(v128 state[25])
 
 #if MEM == 1
   uint64x2x4_t holder;
-  uint64x2x2_t rc_holder;
 
   holder = vld1q_u64_x4((uint64_t *)&state[0]);
   unpack(Aba, Abe, Abi, Abo, holder);
@@ -218,12 +217,7 @@ void KeccakF1600_StatePermutex2(v128 state[25])
     vXORR(BCu, Asu, Du, 50);
 
     vXNA(Eba, Aba, BCe, BCi);
-#if MEM == 1
-    rc_holder = vld2q_dup_u64(&neon_KeccakF_RoundConstants[round]);
-    vxor(Eba, Eba, rc_holder.val[0]);
-#else
-    vxor(Eba, Eba, vdupq_n_u64(neon_KeccakF_RoundConstants[round]));
-#endif
+    vxor(Eba, Eba, vld1q_dup_u64(&neon_KeccakF_RoundConstants[round]));
     vXNA(Ebe, BCe, BCi, BCo);
     vXNA(Ebi, BCi, BCo, BCu);
     vXNA(Ebo, BCo, BCu, Aba);
@@ -300,11 +294,7 @@ void KeccakF1600_StatePermutex2(v128 state[25])
     vXORR(BCu, Esu, Du, 50);
 
     vXNA(Aba, Eba, BCe, BCi);
-#if MEM == 1
-    vxor(Aba, Aba, rc_holder.val[1]);
-#else
-    vxor(Aba, Aba, vdupq_n_u64(neon_KeccakF_RoundConstants[round + 1]));
-#endif
+    vxor(Aba, Aba, vld1q_dup_u64(&neon_KeccakF_RoundConstants[round + 1]));
     vXNA(Abe, BCe, BCi, BCo);
     vXNA(Abi, BCi, BCo, BCu);
     vXNA(Abo, BCo, BCu, Eba);
